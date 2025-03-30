@@ -1,7 +1,7 @@
 #include "subsystems/SwerveModule.h"
 #include "Constants.h"
 #include "angleMath.h"
-#include <iostream>
+#include "util.h"
 
 using namespace ctre::phoenix6;
 using namespace std;
@@ -13,6 +13,16 @@ SwerveModule::SwerveModule(int moduleID, float modulePositionX, float modulePosi
         turnVector /= abs(turnVector);
     }
     this->moduleID = moduleID;
+    dMotor = new hardware::TalonFX(10 + moduleID, "CTREdevices");
+    sMotor = new hardware::TalonFX(20 + moduleID, "CTREdevices");
+    encoder = new hardware::CANcoder(30 + moduleID, "CTREdevices");
+    configs::TalonFXConfiguration cfg{};
+    cfg.Slot0.kP = 5;
+    cfg.Slot0.kS = 3;
+    cfg.TorqueCurrent.PeakForwardTorqueCurrent = SwerveConstants::max_current * 1_A;
+    cfg.TorqueCurrent.PeakReverseTorqueCurrent = -SwerveConstants::max_current * 1_A;
+    cfg.MotorOutput.NeutralMode = signals::NeutralModeValue::Brake;
+    Util::configureMotor(dMotor, &cfg);
 }
 
 // calculates the position change of this module
@@ -42,7 +52,7 @@ void SwerveModule::setVelocity(complex<float> robotVel, float angularVel, comple
     sMotor->Set(error/M_PI);
     float wheelAccelCurrent = getAccelCurrent(accelCurrentVec, angle);
     dMotor->SetControl(m_velocity
-        .WithVelocity(wheelSpeed*SwerveConstants::motor_turns_per_m * 1_A)
+        .WithVelocity(wheelSpeed*SwerveConstants::motor_turns_per_m * 1_tps)
         .WithFeedForward(wheelAccelCurrent*1_A));
 }
 
@@ -91,25 +101,4 @@ complex<float> SwerveModule::getPositionChange(){
 void SwerveModule::resetEncoders(){
     motorPosOld = 0;
     dMotor->SetPosition(0_tr);
-}
-
-void SwerveModule::init(){
-    dMotor = new hardware::TalonFX(10 + moduleID, "CTREdevices");
-    sMotor = new hardware::TalonFX(20 + moduleID, "CTREdevices");
-    encoder = new hardware::CANcoder(30 + moduleID, "CTREdevices");
-    configs::TalonFXConfiguration cfg{};
-    cfg.Slot0.kP = 5;
-    cfg.Slot0.kS = 3;
-    cfg.TorqueCurrent.PeakForwardTorqueCurrent = SwerveConstants::max_current * 1_A;
-    cfg.TorqueCurrent.PeakReverseTorqueCurrent = -SwerveConstants::max_current * 1_A;
-    cfg.MotorOutput.NeutralMode = ctre::phoenix6::signals::NeutralModeValue::Brake;
-    // Retry config apply up to 5 times, report if failure
-    ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;
-    for (int i = 0; i < 5; ++i) {
-        status = dMotor->GetConfigurator().Apply(cfg);
-        if (status.IsOK()) break;
-    }
-    if (!status.IsOK()) {
-        std::cout << "Could not configure device. Error: " << status.GetName() << std::endl;
-    }
 }

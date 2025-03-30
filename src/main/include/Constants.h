@@ -1,5 +1,4 @@
 #pragma once
-
 // constants for the robot as a whole
 namespace MainConst {
     inline constexpr float code_cycle_time = 0.02;
@@ -22,4 +21,10 @@ namespace SwerveConstants {
     inline constexpr float heading_P = 2.5;
 
     inline constexpr float autoalign_P = 0.5;
+}
+
+namespace ScoreMechConst {
+    inline constexpr float elevator_in_to_rotations = 2.54; // 9/9cm*2.54
+    inline constexpr float angle_gear_ratio = 30;
+    inline constexpr float algae_angle_gear_ratio = 54;
 }

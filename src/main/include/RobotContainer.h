@@ -3,12 +3,12 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #pragma once
-
+#include <frc/Joystick.h>
 #include <frc2/command/CommandPtr.h>
-#include <frc2/command/button/CommandXboxController.h>
+#include <frc2/command/button/CommandJoystick.h>
 
 #include "Constants.h"
-#include "subsystems/ExampleSubsystem.h"
+#include "subsystems/ScoringMech.h"
 
 /**
  * This class is where the bulk of the robot should be declared.  Since
@@ -24,13 +24,13 @@ class RobotContainer {
   frc2::CommandPtr GetAutonomousCommand();
 
  private:
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  frc2::CommandXboxController m_driverController{
-      OperatorConstants::kDriverControllerPort};
+  frc::Joystick driverConroller{0};
+  frc::Joystick xKeys{1};
+  frc2::CommandJoystick cmdXKeys{1};
   
-
-  // The robot's subsystems are defined here...
-  ExampleSubsystem m_subsystem;
+  // subsystems...
+  ScoringMech scoringMech{&xKeys};
 
   void ConfigureBindings();
+  void InitSubsystems();
 };

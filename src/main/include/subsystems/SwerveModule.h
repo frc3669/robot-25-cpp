@@ -1,13 +1,13 @@
+#pragma once
 #include <ctre/phoenix6/CANcoder.hpp>
 #include <ctre/phoenix6/TalonFX.hpp>
 #include <complex.h>
-#include <string>
 #include "angleMath.h"
 
 class SwerveModule {
   public:
     SwerveModule(int moduleID, float modulePositionX, float modulePositionY);
-    void setVelocity(complex<float> robotVel, float angularVel, complex<float> robotAccel = complex<float>(0,0), float angularAccel = 0);
+    void setVelocity(complex<float> robotVel, float angularVel, complex<float> robotAccel, float angularAccel);
     void brake();
     complex<float> findModuleVector(complex<float> robotVec, float angularVec);
     float getAccelOvershoot(complex<float> robotVel, float angularVel, complex<float> robotVelIncrement, float angularVelIncrement);
