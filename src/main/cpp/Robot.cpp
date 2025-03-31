@@ -6,7 +6,9 @@
 #include <iostream>
 #include <frc2/command/CommandScheduler.h>
 
-Robot::Robot() {}
+Robot::Robot() {
+  m_container.DisplaySchedulerDetails();
+}
 
 void Robot::RobotInit() {
   m_container.ConfigureChooser();

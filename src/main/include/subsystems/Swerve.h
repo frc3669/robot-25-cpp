@@ -22,6 +22,7 @@ class Swerve : public frc2::SubsystemBase {
     frc2::CommandPtr driveLeftToPole();
     frc2::CommandPtr resetPoseCmd(complex<float> position, float angle);
     frc2::CommandPtr resetPositionCmd(complex<float> position);
+    void addModule(SwerveModule &module);
     
   private:
     frc::Joystick *driverController;
@@ -43,7 +44,6 @@ class Swerve : public frc2::SubsystemBase {
     float getReefAlignmentError();
     float getFeederStationAlignmentError();
     void calculateOdometry();
-    void addModule(SwerveModule &module);
     void resetPosition(complex<float> position);
     void resetPose(complex<float> position, float angle);
     void driveTeleop();
