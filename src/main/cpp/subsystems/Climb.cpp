@@ -15,15 +15,15 @@ Climb::Climb() {
 }
 
 frc2::CommandPtr Climb::extend() {
-    return Run([this] { mClimb.Set(-1); });
+    return Run([this] { mClimb.Set(-1); }).WithName("Extending Climb");
 }
 
 frc2::CommandPtr Climb::retract() {
-    return Run([this] { mClimb.Set(1); });
+    return Run([this] { mClimb.Set(1); }).WithName("Retracting Climb");
 }
 
 frc2::CommandPtr Climb::brake() {
-    return Run([this] { mClimb.SetControl(controls::NeutralOut()); });
+    return Run([this] { mClimb.SetControl(controls::NeutralOut()); }).WithName("Braking Climb");
 }
 
 void Climb::Periodic() {}

@@ -33,6 +33,7 @@ class ScoringMech : public frc2::SubsystemBase {
   frc2::CommandPtr ejectCoral();
   frc2::CommandPtr scoreBarge();
   frc2::CommandPtr scoreProcessor();
+  frc2::CommandPtr prepareForClimb();
 
 
   /**
