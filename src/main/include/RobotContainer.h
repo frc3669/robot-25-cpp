@@ -29,6 +29,7 @@ class RobotContainer {
   frc2::Command* GetAutonomousCommand();
   void ConfigureChooser();
   void ConfigureDefaultCommands();
+  void DisplaySchedulerDetails();
 
  private:
   frc::Joystick m_driverController{0};
