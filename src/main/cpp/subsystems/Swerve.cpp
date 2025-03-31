@@ -4,7 +4,7 @@
 using namespace SwerveConstants;
 using namespace DriverControllerConstants;
 
-Swerve::Swerve(frc::Joystick *driverController) {
+Swerve::Swerve(frc::GenericHID *driverController) {
     this->driverController = driverController;
 }
 

@@ -10,7 +10,7 @@
 using namespace ctre::phoenix6;
 using namespace ScoreMechConst;
 
-ScoringMech::ScoringMech(frc::Joystick *xkeys) {
+ScoringMech::ScoringMech(frc2::CommandGenericHID *xkeys) {
   this->xkeys = xkeys;
   configureMotors();
   elevatorMotor.SetPosition(0_tr);
@@ -159,7 +159,7 @@ frc2::CommandPtr ScoringMech::ejectCoral() {
 frc2::CommandPtr ScoringMech::scoreBarge() {
   return frc2::cmd::Sequence(
     setHeightAndAnglesCmd(49, 0, 50),
-    frc2::cmd::WaitUntil([this] { return xkeys->GetRawButton(8); }),
+    frc2::cmd::WaitUntil([this] { return xkeys->GetHID().GetRawButton(8); }),
     RunOnce([this] { setAlgaeIntakeSpeed(-1); }),
     frc2::cmd::Wait(0.75_s),
     RunOnce([this] { brakeAlgaeIntake(); })
@@ -169,7 +169,7 @@ frc2::CommandPtr ScoringMech::scoreBarge() {
 frc2::CommandPtr ScoringMech::scoreProcessor() {
   return frc2::cmd::Sequence(
     setHeightAndAnglesCmd(0, 0, 125),
-    frc2::cmd::WaitUntil([this] { return xkeys->GetRawButton(8); }),
+    frc2::cmd::WaitUntil([this] { return xkeys->GetHID().GetRawButton(8); }),
     RunOnce([this] { setAlgaeIntakeSpeed(-0.4); }),
     frc2::cmd::Wait(0.75_s),
     RunOnce([this] { brakeAlgaeIntake(); })

@@ -3,7 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #pragma once
-#include <frc/Joystick.h>
+#include <frc/GenericHID.h>
 #include <frc/smartdashboard/SendableChooser.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/CommandPtr.h>
@@ -32,13 +32,12 @@ class RobotContainer {
   void DisplaySchedulerDetails();
 
  private:
-  frc::Joystick m_driverController{0};
-  frc::Joystick m_xKeys{1};
-  frc2::CommandJoystick m_cmdXKeys{1};
+  frc::GenericHID m_driverController{0};
+  frc2::CommandGenericHID m_XKeys{1};
   
   // subsystems...
   Swerve m_drive{&m_driverController};
-  ScoringMech m_scoringMech{&m_xKeys};
+  ScoringMech m_scoringMech{&m_XKeys};
   Climb m_climber{};
 
 

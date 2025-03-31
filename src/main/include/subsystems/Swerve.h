@@ -2,7 +2,7 @@
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc/DigitalInput.h>
-#include <frc/Joystick.h>
+#include <frc/GenericHID.h>
 #include <ctre/phoenix6/Pigeon2.hpp>
 #include "subsystems/SwerveModule.h"
 #include <frc/Timer.h>
@@ -12,7 +12,7 @@
 
 class Swerve : public frc2::SubsystemBase {
   public:
-    Swerve(frc::Joystick *driverController);
+    Swerve(frc::GenericHID *driverController);
     void Periodic() override;
     void SimulationPeriodic() override;
     frc2::CommandPtr defaultDrive();
@@ -25,7 +25,7 @@ class Swerve : public frc2::SubsystemBase {
     void addModule(SwerveModule &module);
     
   private:
-    frc::Joystick *driverController;
+    frc::GenericHID *driverController;
     ctre::phoenix6::hardware::Pigeon2 gyro{1, "CTREdevices"};
     frc::DigitalInput poleSensor{1};
     frc::Timer autoTimer;

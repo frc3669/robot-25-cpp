@@ -7,13 +7,13 @@
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc/DigitalInput.h>
-#include <frc/Joystick.h>
+#include <frc2/command/button/CommandGenericHID.h>
 #include <ctre/phoenix6/TalonFX.hpp>
 #include <ctre/phoenix6/TalonFXS.hpp>
 
 class ScoringMech : public frc2::SubsystemBase {
  public:
-  ScoringMech(frc::Joystick *xkeys);
+  ScoringMech(frc2::CommandGenericHID *xkeys);
 
 
   /**
@@ -75,7 +75,7 @@ class ScoringMech : public frc2::SubsystemBase {
   ctre::phoenix6::hardware::TalonFX coralAngleMotor{51, "CTREdevices"};
   ctre::phoenix6::hardware::TalonFX algaeAngleMotor{52, "CTREdevices"};
   ctre::phoenix6::controls::MotionMagicTorqueCurrentFOC positionCtrl{0_tr};
-  frc::Joystick *xkeys;
+  frc2::CommandGenericHID *xkeys;
 
   // Components (e.g. motor controllers and sensors) should generally be
   // declared private and exposed only through public methods.
