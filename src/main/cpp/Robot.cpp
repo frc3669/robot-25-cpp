@@ -3,10 +3,15 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "Robot.h"
-
+#include <iostream>
 #include <frc2/command/CommandScheduler.h>
 
 Robot::Robot() {}
+
+void Robot::RobotInit() {
+  m_container.ConfigureChooser();
+  m_container.ConfigureDefaultCommands();
+}
 
 /**
  * This function is called every 20 ms, no matter the mode. Use
@@ -36,8 +41,10 @@ void Robot::DisabledPeriodic() {}
 void Robot::AutonomousInit() {
   m_autonomousCommand = m_container.GetAutonomousCommand();
 
-  if (m_autonomousCommand) {
+  if (m_autonomousCommand != nullptr) {
     m_autonomousCommand->Schedule();
+  } else {
+    std::cout << "autonomous command null!";
   }
 }
 
@@ -48,7 +55,7 @@ void Robot::TeleopInit() {
   // teleop starts running. If you want the autonomous to
   // continue until interrupted by another command, remove
   // this line or comment it out.
-  if (m_autonomousCommand) {
+  if (m_autonomousCommand != nullptr) {
     m_autonomousCommand->Cancel();
   }
 }

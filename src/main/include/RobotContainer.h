@@ -4,11 +4,16 @@
 
 #pragma once
 #include <frc/Joystick.h>
+#include <frc/smartdashboard/SendableChooser.h>
+#include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandJoystick.h>
 
 #include "Constants.h"
 #include "subsystems/ScoringMech.h"
+#include "subsystems/Swerve.h"
+#include "subsystems/Climb.h"
+#include "commands/Autos.h"
 
 /**
  * This class is where the bulk of the robot should be declared.  Since
@@ -21,16 +26,41 @@ class RobotContainer {
  public:
   RobotContainer();
 
-  frc2::CommandPtr GetAutonomousCommand();
+  frc2::Command* GetAutonomousCommand();
+  void ConfigureChooser();
+  void ConfigureDefaultCommands();
 
  private:
-  frc::Joystick driverConroller{0};
-  frc::Joystick xKeys{1};
-  frc2::CommandJoystick cmdXKeys{1};
+  frc::Joystick m_driverController{0};
+  frc::Joystick m_xKeys{1};
+  frc2::CommandJoystick m_cmdXKeys{1};
   
   // subsystems...
-  ScoringMech scoringMech{&xKeys};
+  Swerve m_drive{&m_driverController};
+  ScoringMech m_scoringMech{&m_xKeys};
+  Climb m_climber{};
+
+
+  // autonomous trajectories
+  choreo::Trajectory<choreo::SwerveSample> centerTraj1 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Path 1").value();
+  choreo::Trajectory<choreo::SwerveSample> centerTraj2 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Path 2").value();
+  choreo::Trajectory<choreo::SwerveSample> leftTraj1 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Path 1").value();
+  choreo::Trajectory<choreo::SwerveSample> leftTraj2 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Path 2").value();
+  choreo::Trajectory<choreo::SwerveSample> rightTraj1 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Path 1").value();
+  choreo::Trajectory<choreo::SwerveSample> rightTraj2 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Path 2").value();
+
+  // autonomous routines
+  frc2::CommandPtr m_centerAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, centerTraj1, centerTraj2);
+  frc2::CommandPtr m_leftAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, leftTraj1, leftTraj2);
+  frc2::CommandPtr m_rightAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, rightTraj1, rightTraj2);
+
+  frc::SendableChooser<frc2::Command*> m_chooser;
 
   void ConfigureBindings();
-  void InitSubsystems();
 };

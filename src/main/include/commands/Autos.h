@@ -1,16 +1,13 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 #pragma once
 
 #include <frc2/command/CommandPtr.h>
-
+#include "subsystems/Swerve.h"
 #include "subsystems/ScoringMech.h"
+#include "choreo/Choreo.h"
 
 namespace autos {
-/**
- * Example static factory for an autonomous command.
- */
-frc2::CommandPtr ExampleAuto(ScoringMech* subsystem);
+    // follows first path while raising the elevator, scores to the left pole, then follows second path
+    frc2::CommandPtr ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech, choreo::Trajectory<choreo::SwerveSample> &trajectory1, choreo::Trajectory<choreo::SwerveSample> &trajectory2);
+    // follows first path while raising the elevator, scores to the right pole, then follows second path
+    frc2::CommandPtr ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech, choreo::Trajectory<choreo::SwerveSample> &trajectory1, choreo::Trajectory<choreo::SwerveSample> &trajectory2);
 }  // namespace autos

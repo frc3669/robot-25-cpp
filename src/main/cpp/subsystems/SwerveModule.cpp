@@ -35,7 +35,7 @@ void SwerveModule::odometryCalc(){
 }
 
 // drive the wheel in a direction with acceleration feedforward
-void SwerveModule::setVelocity(complex<float> robotVel, float angularVel, complex<float> robotAccel = complex<float>(0,0), float angularAccel = 0) {
+void SwerveModule::setVelocity(complex<float> robotVel, float angularVel, complex<float> robotAccel, float angularAccel) {
     complex<float> vel = findModuleVector(robotVel, angularVel);
     complex<float> accelCurrentVec = findModuleVector(robotAccel, angularAccel);
     float wheelSpeed = abs(vel);

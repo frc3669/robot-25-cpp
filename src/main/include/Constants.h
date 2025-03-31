@@ -4,6 +4,10 @@ namespace MainConst {
     inline constexpr float code_cycle_time = 0.02;
 }
 
+namespace DriverControllerConstants {
+    inline constexpr float dB = 0.1;
+}
+
 // constants for the swerve
 namespace SwerveConstants {
     inline constexpr float max_current = 25;

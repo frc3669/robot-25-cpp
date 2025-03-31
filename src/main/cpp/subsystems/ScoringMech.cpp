@@ -8,6 +8,7 @@
 #include <frc2/command/Commands.h>
 
 using namespace ctre::phoenix6;
+using namespace ScoreMechConst;
 
 ScoringMech::ScoringMech(frc::Joystick *xkeys) {
   this->xkeys = xkeys;
@@ -26,17 +27,17 @@ void ScoringMech::setAlgaeIntakeSpeed(float speed) {
 }
 
 void ScoringMech::setHeight(float height) {
-  float rotations = -height*ScoreMechConst::elevator_in_to_rotations;
+  float rotations = -height*elevator_in_to_rotations;
   elevatorMotor.SetControl(positionCtrl.WithPosition(rotations*1_tr));
 }
 
 void ScoringMech::setCoralAngle(float angle) {
-  float rotations = -angle/360*ScoreMechConst::angle_gear_ratio;
+  float rotations = -angle/360*angle_gear_ratio;
   coralAngleMotor.SetControl(positionCtrl.WithPosition(rotations*1_tr));
 }
 
 void ScoringMech::setAlgaeAngle(float angle) {
-  float rotations = angle/360*ScoreMechConst::algae_angle_gear_ratio;
+  float rotations = angle/360*algae_angle_gear_ratio;
   algaeAngleMotor.SetControl(positionCtrl.WithPosition(rotations * 1_tr));
 }
 
@@ -187,7 +188,7 @@ frc2::CommandPtr ScoringMech::setHeightAndAnglesCmd(float height, float coralAng
 }
 
 float ScoringMech::getHeight() {
-  return -elevatorMotor.GetPosition().GetValueAsDouble()/ScoreMechConst::elevator_in_to_rotations;
+  return -elevatorMotor.GetPosition().GetValueAsDouble()/elevator_in_to_rotations;
 }
 
 bool ScoringMech::getHeightReached(float height) {
@@ -195,7 +196,7 @@ bool ScoringMech::getHeightReached(float height) {
 }
 
 float ScoringMech::getCoralAngle() {
-  return -coralAngleMotor.GetPosition().GetValueAsDouble()*360/ScoreMechConst::angle_gear_ratio;
+  return -coralAngleMotor.GetPosition().GetValueAsDouble()*360/angle_gear_ratio;
 }
 
 bool ScoringMech::getCoralAngleReached(float angle) {
@@ -203,7 +204,7 @@ bool ScoringMech::getCoralAngleReached(float angle) {
 }
 
 float ScoringMech::getAlgaeAngle() {
-  return algaeAngleMotor.GetPosition().GetValueAsDouble()*360/ScoreMechConst::algae_angle_gear_ratio;
+  return algaeAngleMotor.GetPosition().GetValueAsDouble()*360/algae_angle_gear_ratio;
 }
 
 bool ScoringMech::getAlgaeAngleReached(float angle) {
@@ -223,8 +224,8 @@ void ScoringMech::configureMotors() {
   configs::TalonFXConfiguration coralAngleCfg{};
   coralAngleCfg.Slot0.kP = 40;
   coralAngleCfg.Slot0.kS = 4;
-  coralAngleCfg.TorqueCurrent.PeakForwardTorqueCurrent = 50*1_A;
-  coralAngleCfg.TorqueCurrent.PeakReverseTorqueCurrent = -50*1_A;
+  coralAngleCfg.TorqueCurrent.PeakForwardTorqueCurrent = 50_A;
+  coralAngleCfg.TorqueCurrent.PeakReverseTorqueCurrent = -50_A;
   coralAngleCfg.MotionMagic.MotionMagicAcceleration = 80_tr_per_s_sq;
   coralAngleCfg.MotionMagic.MotionMagicCruiseVelocity = 80_tps;
   coralAngleCfg.MotionMagic.MotionMagicJerk = 300_tr_per_s_cu;
@@ -232,8 +233,8 @@ void ScoringMech::configureMotors() {
   configs::TalonFXConfiguration algaeAngleCfg{};
   algaeAngleCfg.Slot0.kP = 30;
   algaeAngleCfg.Slot0.kS = 4;
-  algaeAngleCfg.TorqueCurrent.PeakForwardTorqueCurrent = 30*1_A;
-  algaeAngleCfg.TorqueCurrent.PeakReverseTorqueCurrent = -30*1_A;
+  algaeAngleCfg.TorqueCurrent.PeakForwardTorqueCurrent = 30_A;
+  algaeAngleCfg.TorqueCurrent.PeakReverseTorqueCurrent = -30_A;
   algaeAngleCfg.MotionMagic.MotionMagicAcceleration = 20_tr_per_s_sq;
   algaeAngleCfg.MotionMagic.MotionMagicCruiseVelocity = 40_tps;
   algaeAngleCfg.MotionMagic.MotionMagicJerk = 200_tr_per_s_cu;
@@ -242,8 +243,8 @@ void ScoringMech::configureMotors() {
   elevatorCfg.Slot0.kP = 30;
   elevatorCfg.Slot0.kS = 10;
   elevatorCfg.Slot0.kG = -18;
-  elevatorCfg.TorqueCurrent.PeakForwardTorqueCurrent = 70*1_A;
-  elevatorCfg.TorqueCurrent.PeakReverseTorqueCurrent = -90*1_A;
+  elevatorCfg.TorqueCurrent.PeakForwardTorqueCurrent = 70_A;
+  elevatorCfg.TorqueCurrent.PeakReverseTorqueCurrent = -90_A;
   elevatorCfg.MotionMagic.MotionMagicAcceleration = 80_tr_per_s_sq;
   elevatorCfg.MotionMagic.MotionMagicCruiseVelocity = 80_tps;
   elevatorCfg.MotionMagic.MotionMagicJerk = 300_tr_per_s_cu;
