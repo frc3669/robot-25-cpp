@@ -29,7 +29,7 @@ void RobotContainer::ConfigureBindings() {
   m_cmdXKeys.Button(4).OnTrue(m_scoringMech.intakeL2_5());
   m_cmdXKeys.Button(1).OnTrue(m_scoringMech.scoreBarge());
   m_cmdXKeys.Button(2).OnTrue(m_scoringMech.scoreProcessor());
-  m_cmdXKeys.Button(7).OnTrue(m_scoringMech.setHeightAndAnglesCmd(0,0,170));
+  m_cmdXKeys.Button(7).OnTrue(m_scoringMech.prepareForClimb());
   // climber control button bindings
   m_cmdXKeys.Button(18).WhileTrue(m_climber.extend());
   m_cmdXKeys.Button(19).WhileTrue(m_climber.retract());

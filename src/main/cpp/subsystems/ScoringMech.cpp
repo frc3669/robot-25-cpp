@@ -80,7 +80,7 @@ frc2::CommandPtr ScoringMech::intake() {
     RunOnce([this] { setIntakeSpeed(0.1); }),
     frc2::cmd::WaitUntil([this] { return !intakeSensor.Get(); }),
     RunOnce([this] { brakeIntake(); })
-  );
+  ).WithName("Intaking Coral");
 }
 
 frc2::CommandPtr ScoringMech::coralReset() {
@@ -90,7 +90,7 @@ frc2::CommandPtr ScoringMech::coralReset() {
     RunOnce([this] { setIntakeSpeed(0.1); }),
     frc2::cmd::WaitUntil([this] { return !intakeSensor.Get(); }),
     RunOnce([this] { brakeIntake(); })
-  );
+  ).WithName("Resetting Coral");
 }
 
 frc2::CommandPtr ScoringMech::intakeAlgae() {
@@ -99,7 +99,7 @@ frc2::CommandPtr ScoringMech::intakeAlgae() {
     RunOnce([this] { setAlgaeIntakeSpeed(0.5); }),
     frc2::cmd::WaitUntil([this] { return !algaeIntakeSensor.Get(); }),
     RunOnce([this] { brakeAlgaeIntake(); })
-  );
+  ).WithName("Intaking Algae");
 }
 
 frc2::CommandPtr ScoringMech::intakeL2_5() {
@@ -108,7 +108,7 @@ frc2::CommandPtr ScoringMech::intakeL2_5() {
     RunOnce([this] { setAlgaeIntakeSpeed(0.5); }),
     frc2::cmd::WaitUntil([this] { return !algaeIntakeSensor.Get(); }),
     RunOnce([this] { brakeAlgaeIntake(); })
-  );
+  ).WithName("Intaking from level 2.5");
 }
 
 frc2::CommandPtr ScoringMech::intakeL3_5() {
@@ -117,7 +117,7 @@ frc2::CommandPtr ScoringMech::intakeL3_5() {
     RunOnce([this] { setAlgaeIntakeSpeed(0.5); }),
     frc2::cmd::WaitUntil([this] { return !algaeIntakeSensor.Get(); }),
     RunOnce([this] { brakeAlgaeIntake(); })
-  );
+  ).WithName("Intaking from level 3.5");
 }
 
 frc2::CommandPtr ScoringMech::home() {
@@ -125,19 +125,19 @@ frc2::CommandPtr ScoringMech::home() {
     RunOnce([this] { stopEverything(); }),
     setHeightAndAnglesCmd(15,0,0),
     setHeightAndAnglesCmd(0,0,0)
-  );
+  ).WithName("Homing");
 }
 
 frc2::CommandPtr ScoringMech::goL4() {
-  return setHeightAndAnglesCmd(44, 98.65, 0);
+  return setHeightAndAnglesCmd(44, 98.65, 0).WithName("Going to Level 4");
 }
 
 frc2::CommandPtr ScoringMech::goL3() {
-  return setHeightAndAnglesCmd(6, 151.65, 0);
+  return setHeightAndAnglesCmd(6, 151.65, 0).WithName("Going to Level 3");
 }
 
 frc2::CommandPtr ScoringMech::goL2() {
-  return setHeightAndAnglesCmd(5, 3.65, 0);
+  return setHeightAndAnglesCmd(5, 3.65, 0).WithName("Going to Level 2");
 }
 
 frc2::CommandPtr ScoringMech::goL1() {
@@ -145,7 +145,7 @@ frc2::CommandPtr ScoringMech::goL1() {
     RunOnce([this] { setIntakeSpeed(-0.18); }),
     frc2::cmd::Wait(1_s),
     RunOnce([this] { brakeIntake(); })
-  );
+  ).WithName("Shooting for Level 1");
 }
 
 frc2::CommandPtr ScoringMech::ejectCoral() {
@@ -153,7 +153,7 @@ frc2::CommandPtr ScoringMech::ejectCoral() {
     RunOnce([this] { setEjectCoralSpeed(); }),
     frc2::cmd::Wait(0.25_s),
     RunOnce([this] { brakeIntake(); })
-  );
+  ).WithName("Ejecting Coral");
 }
 
 frc2::CommandPtr ScoringMech::scoreBarge() {
@@ -163,7 +163,7 @@ frc2::CommandPtr ScoringMech::scoreBarge() {
     RunOnce([this] { setAlgaeIntakeSpeed(-1); }),
     frc2::cmd::Wait(0.75_s),
     RunOnce([this] { brakeAlgaeIntake(); })
-  );
+  ).WithName("Scoring in Barge");
 }
 
 frc2::CommandPtr ScoringMech::scoreProcessor() {
@@ -173,7 +173,11 @@ frc2::CommandPtr ScoringMech::scoreProcessor() {
     RunOnce([this] { setAlgaeIntakeSpeed(-0.4); }),
     frc2::cmd::Wait(0.75_s),
     RunOnce([this] { brakeAlgaeIntake(); })
-  );
+  ).WithName("Scoring in the Processor");
+}
+
+frc2::CommandPtr ScoringMech::prepareForClimb() {
+  return setHeightAndAnglesCmd(0,0,170).WithName("Preparing for Climb");
 }
 
 frc2::CommandPtr ScoringMech::setHeightAndAnglesCmd(float height, float coralAngle, float algaeAngle) {
@@ -184,7 +188,7 @@ frc2::CommandPtr ScoringMech::setHeightAndAnglesCmd(float height, float coralAng
     frc2::cmd::WaitUntil([this, &height, &coralAngle, &algaeAngle] { return getHeightReached(height)
                                                                             && getCoralAngleReached(coralAngle)
                                                                             && getAlgaeAngleReached(algaeAngle); })
-  );
+  ).WithName("Setting Height and Angles");
 }
 
 float ScoringMech::getHeight() {

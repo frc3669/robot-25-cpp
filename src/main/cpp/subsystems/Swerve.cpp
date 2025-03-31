@@ -87,7 +87,7 @@ void Swerve::driveTeleop() {
 }
 
 frc2::CommandPtr Swerve::defaultDrive() {
-    return Run([this] { driveTeleop(); });
+    return Run([this] { driveTeleop(); }).WithName("Driving Teleoperated");
 }
 
 void Swerve::setTrajectory(choreo::Trajectory<choreo::SwerveSample> *trajectory) {
@@ -123,7 +123,7 @@ frc2::CommandPtr Swerve::followTrajectory(choreo::Trajectory<choreo::SwerveSampl
         [this] (bool x) { brake(); },
         [this, &trajectory] { return autoTimer.HasElapsed(trajectory.GetTotalTime()); },
         {this}
-    ).ToPtr();
+    ).ToPtr().WithName("Following Trajectory");
 }
 
 void Swerve::simpleDrive(complex<float> velocity) {
@@ -149,7 +149,7 @@ frc2::CommandPtr Swerve::driveRightToPole() {
         [this] (bool x) { simpleDrive(complex<float>(0, 0)); },
         [this] { return !poleSensor.Get(); },
         {this}
-    ).ToPtr();
+    ).ToPtr().WithName("Driving to Right Pole");
 }
 
 frc2::CommandPtr Swerve::driveLeftToPole() {
@@ -159,7 +159,7 @@ frc2::CommandPtr Swerve::driveLeftToPole() {
         [this] (bool x) { simpleDrive(complex<float>(0, 0)); },
         [this] { return !poleSensor.Get(); },
         {this}
-    ).ToPtr();
+    ).ToPtr().WithName("Driving to Left Pole");
 }
 
 float Swerve::getReefAlignmentError() {
@@ -197,11 +197,11 @@ void Swerve::resetPose(complex<float> position, float angle) {
 }
 
 frc2::CommandPtr Swerve::resetPositionCmd(complex<float> position) {
-    return RunOnce([this, &position] { resetPosition(position); });
+    return RunOnce([this, &position] { resetPosition(position); }).WithName("Resetting Position to Specified Value");
 }
 
 frc2::CommandPtr Swerve::resetPoseCmd(complex<float> position, float angle) {
-    return RunOnce([this, &position, &angle] { resetPose(position, angle); });
+    return RunOnce([this, &position, &angle] { resetPose(position, angle); }).WithName("Resetting Pose to Specified Value");
 }
 
 void Swerve::calculateOdometry() {
