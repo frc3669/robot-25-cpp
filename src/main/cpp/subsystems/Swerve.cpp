@@ -20,7 +20,7 @@ void Swerve::driveTeleop() {
     }
     // apply smooth deadband
     if (abs(velocity) > dB) {
-        velocity *= (1.0F - dB/abs(angularVelocity))/(1.0F - dB);
+        velocity *= (1.0F - dB/abs(velocity))/(1.0F - dB);
     } else { velocity = complex<float>(0, 0); }
     if (abs(angularVelocity) > dB) {
         angularVelocity *= (1.0F - dB/abs(angularVelocity))/(1.0F - dB);
