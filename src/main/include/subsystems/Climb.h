@@ -18,5 +18,5 @@ public:
     void SimulationPeriodic() override;
 
 private:
-    ctre::phoenix6::hardware::TalonFX mClimb{43, "CTREdevices"};
+    ctre::phoenix6::hardware::TalonFX mClimb{43, "rio"};
 };
