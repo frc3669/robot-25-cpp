@@ -25,26 +25,26 @@ RobotContainer::RobotContainer() {
 
 void RobotContainer::ConfigureBindings() {
   // scoring mechanism button bindings
-  m_cmdXKeys.Button(9).OnTrue(m_scoringMech.intake());
-  m_cmdXKeys.Button(17).OnTrue(m_scoringMech.home());
-  m_cmdXKeys.Button(6).OnTrue(m_scoringMech.home());
-  m_cmdXKeys.Button(16).OnTrue(m_scoringMech.coralReset());
-  m_cmdXKeys.Button(15).OnTrue(m_scoringMech.goL2());
-  m_cmdXKeys.Button(14).OnTrue(m_scoringMech.goL3());
-  m_cmdXKeys.Button(13).OnTrue(m_scoringMech.goL4());
-  m_cmdXKeys.Button(10).OnTrue(m_scoringMech.ejectCoral());
-  m_cmdXKeys.Button(5).OnTrue(m_scoringMech.intakeAlgae());
-  m_cmdXKeys.Button(3).OnTrue(m_scoringMech.intakeL3_5());
-  m_cmdXKeys.Button(4).OnTrue(m_scoringMech.intakeL2_5());
-  m_cmdXKeys.Button(1).OnTrue(m_scoringMech.scoreBarge());
-  m_cmdXKeys.Button(2).OnTrue(m_scoringMech.scoreProcessor());
-  m_cmdXKeys.Button(7).OnTrue(m_scoringMech.prepareForClimb());
+  m_XKeys.Button(9).OnTrue(m_scoringMech.intake());
+  m_XKeys.Button(17).OnTrue(m_scoringMech.home());
+  m_XKeys.Button(6).OnTrue(m_scoringMech.home());
+  m_XKeys.Button(16).OnTrue(m_scoringMech.coralReset());
+  m_XKeys.Button(15).OnTrue(m_scoringMech.goL2());
+  m_XKeys.Button(14).OnTrue(m_scoringMech.goL3());
+  m_XKeys.Button(13).OnTrue(m_scoringMech.goL4());
+  m_XKeys.Button(10).OnTrue(m_scoringMech.ejectCoral());
+  m_XKeys.Button(5).OnTrue(m_scoringMech.intakeAlgae());
+  m_XKeys.Button(3).OnTrue(m_scoringMech.intakeL3_5());
+  m_XKeys.Button(4).OnTrue(m_scoringMech.intakeL2_5());
+  m_XKeys.Button(1).OnTrue(m_scoringMech.scoreBarge());
+  m_XKeys.Button(2).OnTrue(m_scoringMech.scoreProcessor());
+  m_XKeys.Button(7).OnTrue(m_scoringMech.prepareForClimb());
   // climber control button bindings
-  m_cmdXKeys.Button(18).WhileTrue(m_climber.extend());
-  m_cmdXKeys.Button(19).WhileTrue(m_climber.retract());
+  m_XKeys.Button(18).WhileTrue(m_climber.extend());
+  m_XKeys.Button(19).WhileTrue(m_climber.retract());
   // autoscore button bindings
-  m_cmdXKeys.Button(12).OnTrue(Score::Right(m_drive, m_scoringMech));
-  m_cmdXKeys.Button(11).OnTrue(Score::Left(m_drive, m_scoringMech));
+  m_XKeys.Button(12).OnTrue(Score::Right(m_drive, m_scoringMech));
+  m_XKeys.Button(11).OnTrue(Score::Left(m_drive, m_scoringMech));
 }
 
 void RobotContainer::ConfigureChooser() {
