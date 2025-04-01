@@ -2,6 +2,8 @@
 #include "Constants.h"
 #include "angleMath.h"
 #include "util.h"
+#include "frc/smartdashboard/SmartDashboard.h"
+#include "string"
 
 using namespace ctre::phoenix6;
 using namespace std;
@@ -36,6 +38,7 @@ void SwerveModule::odometryCalc(){
 
 // drive the wheel in a direction with acceleration feedforward
 void SwerveModule::setVelocity(complex<float> robotVel, float angularVel, complex<float> robotAccel, float angularAccel) {
+    frc::SmartDashboard::PutNumber("module"+std::to_string(moduleID)+" angle", angle);
     complex<float> vel = findModuleVector(robotVel, angularVel);
     complex<float> accelCurrentVec = findModuleVector(robotAccel, angularAccel);
     float wheelSpeed = abs(vel);
