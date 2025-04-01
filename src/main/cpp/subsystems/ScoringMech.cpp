@@ -6,6 +6,7 @@
 #include "util.h"
 #include "Constants.h"
 #include <frc2/command/Commands.h>
+#include <frc/smartdashboard/SmartDashboard.h>
 
 using namespace ctre::phoenix6;
 using namespace ScoreMechConst;
@@ -196,6 +197,7 @@ float ScoringMech::getHeight() {
 }
 
 bool ScoringMech::getHeightReached(float height) {
+  frc::SmartDashboard::PutNumber("elevator height", getHeight());
   return abs(getHeight() - height) < 0.5;
 }
 
@@ -204,6 +206,7 @@ float ScoringMech::getCoralAngle() {
 }
 
 bool ScoringMech::getCoralAngleReached(float angle) {
+  frc::SmartDashboard::PutNumber("coral angle", getCoralAngle());
   return abs(getCoralAngle() - angle) < 5;
 }
 
@@ -212,6 +215,7 @@ float ScoringMech::getAlgaeAngle() {
 }
 
 bool ScoringMech::getAlgaeAngleReached(float angle) {
+  frc::SmartDashboard::PutNumber("algae angle", getAlgaeAngle());
   return abs(getAlgaeAngle() - angle) < 5;
 }
 
