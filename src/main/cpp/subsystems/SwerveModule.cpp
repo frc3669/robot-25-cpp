@@ -29,7 +29,7 @@ SwerveModule::SwerveModule(int moduleID, float modulePositionX, float modulePosi
 
 // calculates the position change of this module
 void SwerveModule::odometryCalc(){
-    angle = encoder->GetAbsolutePosition().GetValueAsDouble();
+    angle = encoder->GetAbsolutePosition().GetValueAsDouble() * M_PI * 2;
     float motorPos = dMotor->GetPosition().GetValueAsDouble();
     float motorPosChg = motorPos - motorPosOld;
     motorPosOld = motorPos;
