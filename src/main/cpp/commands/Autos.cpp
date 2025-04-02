@@ -7,11 +7,11 @@ frc2::CommandPtr autos::ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech,
   auto traj2InitialPose = trajectory2.GetInitialPose().value();
   return drive.resetPoseCmd(complex<float>(initialPose.X().value(), initialPose.Y().value()), initialPose.Rotation().Radians().value())
     .AndThen(frc2::cmd::Parallel(
-      drive.followTrajectory(trajectory1),
+      drive.followTrajectory(&trajectory1),
       scoringMech.goL4()))
     .AndThen(Score::Left(drive, scoringMech))
     .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
-    .AndThen(drive.followTrajectory(trajectory2));
+    .AndThen(drive.followTrajectory(&trajectory2));
 }
 
 frc2::CommandPtr autos::ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech, choreo::Trajectory<choreo::SwerveSample> &trajectory1, choreo::Trajectory<choreo::SwerveSample> &trajectory2) {
@@ -19,9 +19,9 @@ frc2::CommandPtr autos::ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech
   auto traj2InitialPose = trajectory2.GetInitialPose().value();
   return drive.resetPoseCmd(complex<float>(initialPose.X().value(), initialPose.Y().value()), initialPose.Rotation().Radians().value())
     .AndThen(frc2::cmd::Parallel(
-      drive.followTrajectory(trajectory1),
+      drive.followTrajectory(&trajectory1),
       scoringMech.goL4()))
     .AndThen(Score::Right(drive, scoringMech))
     .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
-    .AndThen(drive.followTrajectory(trajectory2));
+    .AndThen(drive.followTrajectory(&trajectory2));
 }

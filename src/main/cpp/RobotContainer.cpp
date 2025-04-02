@@ -21,6 +21,7 @@ RobotContainer::RobotContainer() {
 
   // Configure the button bindings
   ConfigureBindings();
+  ConfigureChooser();
 }
 
 void RobotContainer::ConfigureBindings() {
@@ -51,6 +52,7 @@ void RobotContainer::ConfigureChooser() {
   m_chooser.SetDefaultOption("Center Auto", m_centerAuto.get());
   m_chooser.AddOption("Left Auto", m_leftAuto.get());
   m_chooser.AddOption("Right Auto", m_rightAuto.get());
+  frc::SmartDashboard::PutData(&m_chooser);
 }
 
 void RobotContainer::ConfigureDefaultCommands() {

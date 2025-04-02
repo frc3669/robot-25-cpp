@@ -90,12 +90,7 @@ frc2::CommandPtr Swerve::defaultDrive() {
     return Run([this] { driveTeleop(); }).WithName("Driving Teleoperated");
 }
 
-void Swerve::setTrajectory(choreo::Trajectory<choreo::SwerveSample> *trajectory) {
-    this->trajectory = trajectory;
-    autoTimer.Restart();
-}
-
-void Swerve::moveToNextSample() {   
+void Swerve::moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajectory) {   
     heading = gyro.GetYaw().GetValueAsDouble()*M_PI/180 + startingAngle;
     if (!autoTimer.HasElapsed(trajectory->GetTotalTime())) {
         calculateOdometry();
@@ -116,12 +111,13 @@ void Swerve::moveToNextSample() {
     }
 }
 
-frc2::CommandPtr Swerve::followTrajectory(choreo::Trajectory<choreo::SwerveSample> &trajectory) {
+frc2::CommandPtr Swerve::followTrajectory(choreo::Trajectory<choreo::SwerveSample> *trajectory) {
+
     return frc2::FunctionalCommand(
-        [this, &trajectory] { setTrajectory(&trajectory); },
-        [this] { moveToNextSample(); },
+        [this] { this->autoTimer.Restart(); },
+        [this, trajectory] { moveToNextSample(trajectory); },
         [this] (bool x) { brake(); },
-        [this, &trajectory] { return autoTimer.HasElapsed(trajectory.GetTotalTime()); },
+        [this, trajectory] { return autoTimer.HasElapsed(trajectory->GetTotalTime()); },
         {this}
     ).ToPtr().WithName("Following Trajectory");
 }
@@ -197,11 +193,11 @@ void Swerve::resetPose(complex<float> position, float angle) {
 }
 
 frc2::CommandPtr Swerve::resetPositionCmd(complex<float> position) {
-    return RunOnce([this, &position] { resetPosition(position); }).WithName("Resetting Position to Specified Value");
+    return RunOnce([this, position] { resetPosition(position); }).WithName("Resetting Position to Specified Value");
 }
 
 frc2::CommandPtr Swerve::resetPoseCmd(complex<float> position, float angle) {
-    return RunOnce([this, &position, &angle] { resetPose(position, angle); }).WithName("Resetting Pose to Specified Value");
+    return RunOnce([this, position, angle] { resetPose(position, angle); }).WithName("Resetting Pose to Specified Value");
 }
 
 void Swerve::calculateOdometry() {

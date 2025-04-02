@@ -8,11 +8,10 @@
 
 Robot::Robot() {
   m_container.DisplaySchedulerDetails();
+  m_container.ConfigureDefaultCommands();
 }
 
 void Robot::RobotInit() {
-  m_container.ConfigureChooser();
-  m_container.ConfigureDefaultCommands();
 }
 
 /**

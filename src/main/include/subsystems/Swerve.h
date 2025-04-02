@@ -16,7 +16,7 @@ class Swerve : public frc2::SubsystemBase {
     void Periodic() override;
     void SimulationPeriodic() override;
     frc2::CommandPtr defaultDrive();
-    frc2::CommandPtr followTrajectory(choreo::Trajectory<choreo::SwerveSample> &trajectory);
+    frc2::CommandPtr followTrajectory(choreo::Trajectory<choreo::SwerveSample> *trajectory);
     void brake();
     frc2::CommandPtr driveRightToPole();
     frc2::CommandPtr driveLeftToPole();
@@ -35,12 +35,10 @@ class Swerve : public frc2::SubsystemBase {
     complex<float> position = complex<float>(0, 0);
     float startingAngle = 0;
     float heading = 0;
-    choreo::Trajectory<choreo::SwerveSample> *trajectory;
     float possibleReefAngles[6] = {0, M_PI/3, 2*M_PI/3, M_PI, 4*M_PI/3, 5*M_PI/3};
     float possibleFeederStationAngles[2] = {2.1995556168958954, -2.1995556168958954};
     
-    void setTrajectory(choreo::Trajectory<choreo::SwerveSample> *trajectory);
-    void moveToNextSample();
+    void moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajectory);
     float getReefAlignmentError();
     float getFeederStationAlignmentError();
     void calculateOdometry();
