@@ -30,6 +30,8 @@ class RobotContainer {
   void ConfigureChooser();
   void ConfigureDefaultCommands();
   void DisplaySchedulerDetails();
+  
+  ScoringMech m_scoringMech{&m_XKeys};
 
  private:
   frc::GenericHID m_driverController{0};
@@ -37,7 +39,6 @@ class RobotContainer {
   
   // subsystems...
   Swerve m_drive{&m_driverController};
-  ScoringMech m_scoringMech{&m_XKeys};
   Climb m_climber{};
 
 

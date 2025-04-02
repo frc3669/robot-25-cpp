@@ -95,10 +95,10 @@ void Swerve::moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajecto
     if (!autoTimer.HasElapsed(trajectory->GetTotalTime())) {
         calculateOdometry();
         choreo::SwerveSample currentSample = trajectory->SampleAt(autoTimer.Get()).value();
-        complex<float> positionError = complex<float>(currentSample.x.value(), currentSample.y.value());
+        complex<float> positionError = complex<float>(currentSample.x.value(), currentSample.y.value()) - position;
         float headingError = currentSample.heading.value() - heading;
         am::limit(headingError);
-        complex<float> velocity = complex<float>(currentSample.vx.value(), currentSample.vy.value()) = position_P * positionError;
+        complex<float> velocity = complex<float>(currentSample.vx.value(), currentSample.vy.value()) + position_P * positionError;
         float angularVelocity = currentSample.omega.value() + heading_P * headingError;
         velocity *= polar<float>(1, -heading);
         for (auto &module : modules) {

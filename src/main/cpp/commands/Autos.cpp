@@ -11,7 +11,8 @@ frc2::CommandPtr autos::ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech,
       scoringMech.goL4()))
     .AndThen(Score::Left(drive, scoringMech))
     .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
-    .AndThen(drive.followTrajectory(&trajectory2));
+    .AndThen(drive.followTrajectory(&trajectory2))
+    .AndThen(scoringMech.home());
 }
 
 frc2::CommandPtr autos::ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech, choreo::Trajectory<choreo::SwerveSample> &trajectory1, choreo::Trajectory<choreo::SwerveSample> &trajectory2) {
@@ -23,5 +24,6 @@ frc2::CommandPtr autos::ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech
       scoringMech.goL4()))
     .AndThen(Score::Right(drive, scoringMech))
     .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
-    .AndThen(drive.followTrajectory(&trajectory2));
+    .AndThen(drive.followTrajectory(&trajectory2))
+    .AndThen(scoringMech.home());
 }
