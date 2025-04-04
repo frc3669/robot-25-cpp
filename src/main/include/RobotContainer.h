@@ -58,7 +58,7 @@ class RobotContainer {
 
   // autonomous routines
   frc2::CommandPtr m_centerAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, centerTraj1, centerTraj2);
-  frc2::CommandPtr m_leftAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, leftTraj1, leftTraj2);
+  frc2::CommandPtr m_leftAuto = autos::ScoreL4LeftPole(m_drive, m_scoringMech, leftTraj1, leftTraj2);
   frc2::CommandPtr m_rightAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, rightTraj1, rightTraj2);
 
   frc::SendableChooser<frc2::Command*> m_chooser;

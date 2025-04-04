@@ -12,8 +12,8 @@ namespace DriverControllerConstants {
 namespace SwerveConstants {
     inline constexpr float max_current = 28;
     inline constexpr float feedforward_current = 4;
-    inline constexpr float current_headroom = 0;
-    inline constexpr float max_accel = 11.2;
+    inline constexpr float current_headroom = 4;
+    inline constexpr float max_accel = 10;
     inline constexpr float max_m_per_sec_per_cycle = max_accel * MainConst::code_cycle_time;
     inline constexpr float current_to_accel_ratio = 9;
     inline constexpr float motor_turns_per_wheel_turn = 6.75;
