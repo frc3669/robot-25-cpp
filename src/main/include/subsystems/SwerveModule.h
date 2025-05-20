@@ -8,6 +8,7 @@ class SwerveModule {
   public:
     SwerveModule(int moduleID, float modulePositionX, float modulePositionY);
     void setVelocity(complex<float> robotVel, float angularVel, complex<float> robotAccel, float angularAccel);
+    void setAcceleration(float accel);
     void brake();
     complex<float> findModuleVector(complex<float> robotVec, float angularVec);
     float getAccelOvershoot(complex<float> robotVel, float angularVel, complex<float> robotVelIncrement, float angularVelIncrement);
@@ -21,7 +22,8 @@ class SwerveModule {
     ctre::phoenix6::hardware::TalonFX *dMotor;
     ctre::phoenix6::hardware::TalonFX *sMotor;
     ctre::phoenix6::hardware::CANcoder *encoder;
-	ctre::phoenix6::controls::VelocityTorqueCurrentFOC m_velocity{0_tps};
+	  ctre::phoenix6::controls::VelocityTorqueCurrentFOC m_velocity{0_tps};
+	  ctre::phoenix6::controls::TorqueCurrentFOC m_torque{0_A};
     complex<float> turnVector;
     complex<float> posChg = complex<float>(0,0);
     float motorPosOld = 0;

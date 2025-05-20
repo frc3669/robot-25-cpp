@@ -5,6 +5,7 @@
 #include "Robot.h"
 #include <iostream>
 #include <frc2/command/CommandScheduler.h>
+// #include "frc/DataLogManager.h"
 
 Robot::Robot() {
   m_container.DisplaySchedulerDetails();
@@ -31,7 +32,9 @@ void Robot::RobotPeriodic() {
  * can use it to reset any subsystem information you want to clear when the
  * robot is disabled.
  */
-void Robot::DisabledInit() {}
+void Robot::DisabledInit() {
+  // frc::DataLogManager::Stop();
+}
 
 void Robot::DisabledPeriodic() {}
 
@@ -56,6 +59,7 @@ void Robot::TeleopInit() {
   // teleop starts running. If you want the autonomous to
   // continue until interrupted by another command, remove
   // this line or comment it out.
+  // frc::DataLogManager::Start();
   if (m_autonomousCommand != nullptr) {
     m_autonomousCommand->Cancel();
   }

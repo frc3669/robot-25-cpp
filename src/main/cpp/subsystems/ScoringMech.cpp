@@ -242,14 +242,17 @@ void ScoringMech::configureMotors() {
   algaeAngleCfg.MotionMagic.MotionMagicJerk = 200_tr_per_s_cu;
   // elevator motor configs
   configs::TalonFXConfiguration elevatorCfg{};
-  elevatorCfg.Slot0.kP = 70;
-  elevatorCfg.Slot0.kS = 4;
+  elevatorCfg.Slot0.kP = 40;
+  elevatorCfg.Slot0.kS = 0;
   elevatorCfg.Slot0.kG = -18;
-  elevatorCfg.TorqueCurrent.PeakForwardTorqueCurrent = 70_A;
-  elevatorCfg.TorqueCurrent.PeakReverseTorqueCurrent = -90_A;
-  elevatorCfg.MotionMagic.MotionMagicAcceleration = 70_tr_per_s_sq;
-  elevatorCfg.MotionMagic.MotionMagicCruiseVelocity = 80_tps;
-  elevatorCfg.MotionMagic.MotionMagicJerk = 100_tr_per_s_cu;
+  elevatorCfg.TorqueCurrent.PeakForwardTorqueCurrent = 150_A;
+  elevatorCfg.TorqueCurrent.PeakReverseTorqueCurrent = -200_A;
+  elevatorCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+  elevatorCfg.CurrentLimits.SupplyCurrentLimit = 60_A;
+  elevatorCfg.CurrentLimits.SupplyCurrentLowerTime = 0_s;
+  elevatorCfg.MotionMagic.MotionMagicAcceleration = 150_tr_per_s_sq;
+  elevatorCfg.MotionMagic.MotionMagicCruiseVelocity = 90_tps;
+  elevatorCfg.MotionMagic.MotionMagicJerk = 400_tr_per_s_cu;
   // coral scoring motor configs
   configs::TalonFXSConfiguration scoringCfg{};
   scoringCfg.Commutation.MotorArrangement = signals::MotorArrangementValue::Minion_JST;

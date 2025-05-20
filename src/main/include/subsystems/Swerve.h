@@ -20,6 +20,8 @@ class Swerve : public frc2::SubsystemBase {
     void brake();
     frc2::CommandPtr driveRightToPole();
     frc2::CommandPtr driveLeftToPole();
+    frc2::CommandPtr accelerateForward(float accel);
+    frc2::CommandPtr accelerateBackward(float accel);
     frc2::CommandPtr resetPoseCmd(complex<float> position, float angle);
     frc2::CommandPtr resetPositionCmd(complex<float> position);
     void addModule(SwerveModule &module);
@@ -46,4 +48,5 @@ class Swerve : public frc2::SubsystemBase {
     void resetPose(complex<float> position, float angle);
     void driveTeleop();
     void simpleDrive(complex<float> velocity);
+    void testAccel(float accel);
 };

@@ -122,6 +122,14 @@ frc2::CommandPtr Swerve::followTrajectory(choreo::Trajectory<choreo::SwerveSampl
     ).ToPtr().WithName("Following Trajectory");
 }
 
+frc2::CommandPtr Swerve::accelerateForward(float accel) {
+    return Run([this, accel] { testAccel(accel); }).WithName("Accelerating Forward");
+}
+
+frc2::CommandPtr Swerve::accelerateBackward(float accel) {
+    return Run([this, accel] { testAccel(-accel); }).WithName("Accelerating Backward");
+}
+
 void Swerve::simpleDrive(complex<float> velocity) {
     float moduleSpeed = abs(velocity);
     if (moduleSpeed > max_m_per_sec) {
@@ -129,6 +137,12 @@ void Swerve::simpleDrive(complex<float> velocity) {
     }
     for (auto &module : modules) {
         module.setVelocity(velocity, 0, {0, 0}, 0);
+    }
+}
+
+void Swerve::testAccel(float accel) {
+    for (auto &module : modules) {
+        module.setAcceleration(accel);
     }
 }
 

@@ -23,8 +23,13 @@ SwerveModule::SwerveModule(int moduleID, float modulePositionX, float modulePosi
     cfg.Slot0.kS = 3;
     cfg.TorqueCurrent.PeakForwardTorqueCurrent = SwerveConstants::max_current * 1_A;
     cfg.TorqueCurrent.PeakReverseTorqueCurrent = -SwerveConstants::max_current * 1_A;
+    cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+    cfg.CurrentLimits.SupplyCurrentLowerLimit = 20_A;
+    cfg.CurrentLimits.SupplyCurrentLowerTime = 0_s;
+    cfg.CurrentLimits.SupplyCurrentLimit = 20_A;
     cfg.MotorOutput.NeutralMode = signals::NeutralModeValue::Brake;
     Util::configureMotor(dMotor, &cfg);
+    Util::configureMotor(sMotor, &cfg);
 }
 
 // calculates the position change of this module
@@ -57,6 +62,15 @@ void SwerveModule::setVelocity(complex<float> robotVel, float angularVel, comple
     dMotor->SetControl(m_velocity
         .WithVelocity(wheelSpeed*SwerveConstants::motor_turns_per_m * 1_tps)
         .WithFeedForward(wheelAccelCurrent*1_A));
+}
+
+void SwerveModule::setAcceleration(float accel) {
+    angle = encoder->GetAbsolutePosition().GetValueAsDouble() * M_PI * 2;
+    float error = -angle;
+    sMotor->Set(error/M_PI);
+    dMotor->SetControl(m_torque.WithOutput(accel * 1_A));
+    frc::SmartDashboard::PutNumber("module"+std::to_string(moduleID)+" velocity", dMotor->GetVelocity().GetValueAsDouble());
+    frc::SmartDashboard::PutNumber("module"+std::to_string(moduleID)+" torque_current", dMotor->GetTorqueCurrent().GetValueAsDouble());
 }
 
 // get the torque current to apply to the motor based on an acceleration vector

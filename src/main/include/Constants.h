@@ -10,7 +10,7 @@ namespace DriverControllerConstants {
 
 // constants for the swerve
 namespace SwerveConstants {
-    inline constexpr float max_current = 25;
+    inline constexpr float max_current = 100;
     inline constexpr float feedforward_current = 4;
     inline constexpr float current_headroom = 4;
     inline constexpr float max_accel = 10;
@@ -28,7 +28,7 @@ namespace SwerveConstants {
 }
 
 namespace ScoreMechConst {
-    inline constexpr float elevator_in_to_rotations = 2.54; // 9/9cm*2.54
+    inline constexpr float elevator_in_to_rotations = 5.0/9*2.54;
     inline constexpr float angle_gear_ratio = 30;
     inline constexpr float algae_angle_gear_ratio = 54;
 }

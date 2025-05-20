@@ -39,10 +39,12 @@ void RobotContainer::ConfigureBindings() {
   m_XKeys.Button(4).OnTrue(m_scoringMech.intakeL2_5());
   m_XKeys.Button(1).OnTrue(m_scoringMech.scoreBarge());
   m_XKeys.Button(2).OnTrue(m_scoringMech.scoreProcessor());
-  m_XKeys.Button(7).OnTrue(m_scoringMech.prepareForClimb());
+  m_XKeys.Button(18).WhileTrue(m_drive.accelerateForward(80));
+  m_XKeys.Button(19).WhileTrue(m_drive.accelerateBackward(80));
   // climber control button bindings
-  m_XKeys.Button(18).WhileTrue(m_climber.extend());
-  m_XKeys.Button(19).WhileTrue(m_climber.retract());
+  // m_XKeys.Button(7).OnTrue(m_scoringMech.prepareForClimb());
+  // m_XKeys.Button(18).WhileTrue(m_climber.extend());
+  // m_XKeys.Button(19).WhileTrue(m_climber.retract());
   // autoscore button bindings
   m_XKeys.Button(12).OnTrue(Score::Right(m_drive, m_scoringMech));
   m_XKeys.Button(11).OnTrue(Score::Left(m_drive, m_scoringMech));

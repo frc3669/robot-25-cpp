@@ -25,5 +25,6 @@ frc2::CommandPtr autos::ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech
     .AndThen(Score::Right(drive, scoringMech))
     .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
     .AndThen(drive.followTrajectory(&trajectory2))
+    
     .AndThen(scoringMech.home());
 }
