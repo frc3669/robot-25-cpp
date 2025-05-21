@@ -47,6 +47,7 @@ class Swerve : public frc2::SubsystemBase {
     void resetPosition(complex<float> position);
     void resetPose(complex<float> position, float angle);
     void driveTeleop();
+    void driveTeleop2();
     void simpleDrive(complex<float> velocity);
     void testAccel(float accel);
 };
