@@ -87,7 +87,7 @@ void Swerve::driveTeleop() {
 }
 
 void Swerve::driveTeleop2() {
-    complex<float> acceleration = complex<float>(driverController->GetRawAxis(1), -driverController->GetRawAxis(0));
+    complex<float> acceleration = complex<float>(-driverController->GetRawAxis(1), -driverController->GetRawAxis(0));
     float angularAcceleration = -driverController->GetRawAxis(4);
     if (driverController->GetRawButton(4)) {
         gyro.SetYaw(0_deg);
@@ -98,7 +98,7 @@ void Swerve::driveTeleop2() {
     } else { acceleration = complex<float>(0, 0); }
     if (abs(angularAcceleration) > dB) {
         angularAcceleration *= (1.0F - dB/abs(angularAcceleration))/(1.0F - dB);
-    } else { acceleration = 0; }
+    } else { angularAcceleration = 0; }
     // autoalign with A and B buttons
     heading = gyro.GetYaw().GetValueAsDouble()*M_PI/180 + startingAngle;
     // get complex number for robot orienting and field orienting
@@ -108,12 +108,20 @@ void Swerve::driveTeleop2() {
     } else if (driverController->GetRawButton(2)) {
         angularAcceleration += getFeederStationAlignmentError() * autoalign_P;
     }
-    // scale the velocities to meters per second
+    // scale the accelerations to meters per second squared
     acceleration *= max_accel;
     angularAcceleration *= max_accel;
     // accelerate the velocity
-    slewVelocity += (acceleration - slewVelocity/abs(slewVelocity)*braking_accel)*MainConst::code_cycle_time;
-    slewAngularVelocity += (angularAcceleration - slewAngularVelocity/abs(slewAngularVelocity)*braking_accel)*MainConst::code_cycle_time;
+    if (abs(slewVelocity) != 0) {
+        slewVelocity += (acceleration - slewVelocity/abs(slewVelocity)*braking_accel)*MainConst::code_cycle_time;
+    } else {
+        slewVelocity += acceleration*MainConst::code_cycle_time;
+    }
+    if (slewAngularVelocity != 0) {
+        slewAngularVelocity += (angularAcceleration - slewAngularVelocity/abs(slewAngularVelocity)*braking_accel)*MainConst::code_cycle_time;
+    } else {
+        slewAngularVelocity += angularAcceleration*MainConst::code_cycle_time;
+    }
     // set to zero if close to zero
     if (abs(slewVelocity) < braking_accel*MainConst::code_cycle_time) {
         slewVelocity = complex<float>(0, 0);
@@ -124,7 +132,7 @@ void Swerve::driveTeleop2() {
     // find the robot oriented velocity
     complex<float> robotVelocity = slewVelocity * robotOrientMultiplier;
     // find the fastest module speed
-    float highest = max_accel;
+    float highest = max_m_per_sec;
     for (auto &module : modules) {
         float moduleSpeed = abs(module.findModuleVector(robotVelocity, slewAngularVelocity));
         if (moduleSpeed > highest) { highest = moduleSpeed; }
