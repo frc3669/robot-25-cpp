@@ -13,7 +13,7 @@ void Swerve::SimulationPeriodic() {}
 void Swerve::Periodic() {}
 
 void Swerve::driveTeleop() {
-    complex<float> velocity = (0.3F + float(driverController->GetRawAxis(3))*0.7F)*complex<float>(-driverController->GetRawAxis(1), -driverController->GetRawAxis(0));
+    complex<float> velocity = complex<float>(-driverController->GetRawAxis(1), -driverController->GetRawAxis(0));
     float angularVelocity = -driverController->GetRawAxis(4);
     if (driverController->GetRawButton(4)) {
         gyro.SetYaw(0_deg);
@@ -86,69 +86,8 @@ void Swerve::driveTeleop() {
     }
 }
 
-void Swerve::driveTeleop2() {
-    complex<float> acceleration = complex<float>(-driverController->GetRawAxis(1), -driverController->GetRawAxis(0));
-    float angularAcceleration = -driverController->GetRawAxis(4);
-    if (driverController->GetRawButton(4)) {
-        gyro.SetYaw(0_deg);
-    }
-    // apply smooth deadband
-    if (abs(acceleration) > dB) {
-        acceleration *= (1.0F - dB/abs(acceleration))/(1.0F - dB);
-    } else { acceleration = complex<float>(0, 0); }
-    if (abs(angularAcceleration) > dB) {
-        angularAcceleration *= (1.0F - dB/abs(angularAcceleration))/(1.0F - dB);
-    } else { angularAcceleration = 0; }
-    // autoalign with A and B buttons
-    heading = gyro.GetYaw().GetValueAsDouble()*M_PI/180 + startingAngle;
-    // get complex number for robot orienting and field orienting
-    complex<float> robotOrientMultiplier = polar<float>(1, -heading);
-    if (driverController->GetRawButton(1)) {
-        angularAcceleration += getReefAlignmentError() * autoalign_P;
-    } else if (driverController->GetRawButton(2)) {
-        angularAcceleration += getFeederStationAlignmentError() * autoalign_P;
-    }
-    // scale the accelerations to meters per second squared
-    acceleration *= max_accel;
-    angularAcceleration *= max_accel;
-    // accelerate the velocity
-    if (abs(slewVelocity) != 0) {
-        slewVelocity += (acceleration - slewVelocity/abs(slewVelocity)*braking_accel)*MainConst::code_cycle_time;
-    } else {
-        slewVelocity += acceleration*MainConst::code_cycle_time;
-    }
-    if (slewAngularVelocity != 0) {
-        slewAngularVelocity += (angularAcceleration - slewAngularVelocity/abs(slewAngularVelocity)*braking_accel)*MainConst::code_cycle_time;
-    } else {
-        slewAngularVelocity += angularAcceleration*MainConst::code_cycle_time;
-    }
-    // set to zero if close to zero
-    if (abs(slewVelocity) < braking_accel*MainConst::code_cycle_time) {
-        slewVelocity = complex<float>(0, 0);
-    }
-    if (abs(slewAngularVelocity) < braking_accel*MainConst::code_cycle_time) {
-        slewAngularVelocity = 0;
-    }
-    // find the robot oriented velocity
-    complex<float> robotVelocity = slewVelocity * robotOrientMultiplier;
-    // find the fastest module speed
-    float highest = max_m_per_sec;
-    for (auto &module : modules) {
-        float moduleSpeed = abs(module.findModuleVector(robotVelocity, slewAngularVelocity));
-        if (moduleSpeed > highest) { highest = moduleSpeed; }
-    }
-    // normalize the velocities
-    slewVelocity *= max_m_per_sec/highest;
-    slewAngularVelocity *= max_m_per_sec/highest;
-    robotVelocity *= max_m_per_sec/highest;
-    // drive the modules
-    for (auto &module : modules) {
-        module.setVelocity(robotVelocity, slewAngularVelocity, 0, 0);
-    }
-}
-
 frc2::CommandPtr Swerve::defaultDrive() {
-    return Run([this] { driveTeleop2(); }).WithName("Driving Teleoperated");
+    return Run([this] { driveTeleop(); }).WithName("Driving Teleoperated");
 }
 
 void Swerve::moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajectory) {   
