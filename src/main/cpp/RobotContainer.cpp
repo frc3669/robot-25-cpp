@@ -37,14 +37,13 @@ void RobotContainer::ConfigureBindings() {
   m_XKeys.Button(5).OnTrue(m_scoringMech.intakeAlgae());
   m_XKeys.Button(3).OnTrue(m_scoringMech.intakeL3_5());
   m_XKeys.Button(4).OnTrue(m_scoringMech.intakeL2_5());
-  m_XKeys.Button(1).OnTrue(m_scoringMech.scoreBarge());
-  m_XKeys.Button(2).OnTrue(m_scoringMech.scoreProcessor());
-  m_XKeys.Button(18).WhileTrue(m_drive.accelerateForward(80));
-  m_XKeys.Button(19).WhileTrue(m_drive.accelerateBackward(80));
+  m_XKeys.Button(1).OnTrue(m_scoringMech.goBarge());
+  m_XKeys.Button(2).OnTrue(m_scoringMech.goProcessor());
+  m_XKeys.Button(8).OnTrue(m_scoringMech.ejectAlgae());
   // climber control button bindings
-  // m_XKeys.Button(7).OnTrue(m_scoringMech.prepareForClimb());
-  // m_XKeys.Button(18).WhileTrue(m_climber.extend());
-  // m_XKeys.Button(19).WhileTrue(m_climber.retract());
+  m_XKeys.Button(7).OnTrue(m_scoringMech.prepareForClimb());
+  m_XKeys.Button(18).WhileTrue(m_climber.extend());
+  m_XKeys.Button(19).WhileTrue(m_climber.retract());
   // autoscore button bindings
   m_XKeys.Button(12).OnTrue(Score::Right(m_drive, m_scoringMech));
   m_XKeys.Button(11).OnTrue(Score::Left(m_drive, m_scoringMech));
@@ -54,6 +53,7 @@ void RobotContainer::ConfigureChooser() {
   m_chooser.SetDefaultOption("Center Auto", m_centerAuto.get());
   m_chooser.AddOption("Left Auto", m_leftAuto.get());
   m_chooser.AddOption("Right Auto", m_rightAuto.get());
+  m_chooser.AddOption("Right Algae Auto", m_rightAlgaeAuto.get());
   frc::SmartDashboard::PutData(&m_chooser);
 }
 

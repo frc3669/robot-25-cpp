@@ -10,4 +10,10 @@ namespace autos {
     frc2::CommandPtr ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech, choreo::Trajectory<choreo::SwerveSample> &trajectory1, choreo::Trajectory<choreo::SwerveSample> &trajectory2);
     // follows first path while raising the elevator, scores to the right pole, then follows second path
     frc2::CommandPtr ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech, choreo::Trajectory<choreo::SwerveSample> &trajectory1, choreo::Trajectory<choreo::SwerveSample> &trajectory2);
-}  // namespace autos
+    frc2::CommandPtr RightAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
+        choreo::Trajectory<choreo::SwerveSample> &trajectory1,
+        choreo::Trajectory<choreo::SwerveSample> &trajectory2,
+        choreo::Trajectory<choreo::SwerveSample> &agaeTraj1,
+        choreo::Trajectory<choreo::SwerveSample> &agaeTraj2,
+        choreo::Trajectory<choreo::SwerveSample> &agaeTraj3 );
+}

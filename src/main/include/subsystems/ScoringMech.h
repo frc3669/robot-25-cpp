@@ -24,6 +24,7 @@ class ScoringMech : public frc2::SubsystemBase {
   frc2::CommandPtr intakeAlgae();
   frc2::CommandPtr intakeL2_5();
   frc2::CommandPtr intakeL3_5();
+  frc2::CommandPtr ejectAlgae();
   frc2::CommandPtr home();
   frc2::CommandPtr setHeightAndAnglesCmd(float height, float coralAngle, float algaeAngle);
   frc2::CommandPtr goL4();
@@ -31,8 +32,8 @@ class ScoringMech : public frc2::SubsystemBase {
   frc2::CommandPtr goL2();
   frc2::CommandPtr goL1();
   frc2::CommandPtr ejectCoral();
-  frc2::CommandPtr scoreBarge();
-  frc2::CommandPtr scoreProcessor();
+  frc2::CommandPtr goBarge();
+  frc2::CommandPtr goProcessor();
   frc2::CommandPtr prepareForClimb();
 
 
@@ -57,6 +58,7 @@ class ScoringMech : public frc2::SubsystemBase {
   void brakeIntake();
   // sets the intake speed to eject coral depending on the current position
   void setEjectCoralSpeed();
+  void setEjectAlgaeSpeed();
   void brakeAlgaeIntake();
   void stopEverything();
   bool getHeightReached(float height);

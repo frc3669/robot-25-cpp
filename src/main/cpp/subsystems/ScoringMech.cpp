@@ -62,6 +62,14 @@ void ScoringMech::setEjectCoralSpeed() {
   }
 }
 
+void ScoringMech::setEjectAlgaeSpeed() {
+  if (getHeight() > 20) {
+    algaeScoringMotor.SetControl(controls::DutyCycleOut(-1));
+  } else {
+    scoringMotor.SetControl(controls::DutyCycleOut(-0.4));
+  }
+}
+
 void ScoringMech::brakeAlgaeIntake() {
   algaeScoringMotor.SetControl(controls::NeutralOut());
 }
@@ -157,24 +165,24 @@ frc2::CommandPtr ScoringMech::ejectCoral() {
   ).WithName("Ejecting Coral");
 }
 
-frc2::CommandPtr ScoringMech::scoreBarge() {
+frc2::CommandPtr ScoringMech::goBarge() {
   return frc2::cmd::Sequence(
-    setHeightAndAnglesCmd(49, 0, 50),
-    frc2::cmd::WaitUntil([this] { return xkeys->GetHID().GetRawButton(8); }),
-    RunOnce([this] { setAlgaeIntakeSpeed(-1); }),
-    frc2::cmd::Wait(0.75_s),
-    RunOnce([this] { brakeAlgaeIntake(); })
-  ).WithName("Scoring in Barge");
+    setHeightAndAnglesCmd(49, 0, 50)
+  ).WithName("Going to Barge Pose");
 }
 
-frc2::CommandPtr ScoringMech::scoreProcessor() {
+frc2::CommandPtr ScoringMech::ejectAlgae() {
   return frc2::cmd::Sequence(
-    setHeightAndAnglesCmd(0, 0, 125),
-    frc2::cmd::WaitUntil([this] { return xkeys->GetHID().GetRawButton(8); }),
-    RunOnce([this] { setAlgaeIntakeSpeed(-0.4); }),
+    RunOnce([this] { setEjectAlgaeSpeed(); }),
     frc2::cmd::Wait(0.75_s),
     RunOnce([this] { brakeAlgaeIntake(); })
-  ).WithName("Scoring in the Processor");
+  ).WithName("Ejecting Algae");
+}
+
+frc2::CommandPtr ScoringMech::goProcessor() {
+  return frc2::cmd::Sequence(
+    setHeightAndAnglesCmd(0, 0, 125)
+  ).WithName("Going to Processor Pose");
 }
 
 frc2::CommandPtr ScoringMech::prepareForClimb() {

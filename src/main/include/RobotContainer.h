@@ -55,11 +55,18 @@ class RobotContainer {
     choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Path 1").value();
   choreo::Trajectory<choreo::SwerveSample> rightTraj2 =
     choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Path 2").value();
+  choreo::Trajectory<choreo::SwerveSample> rightAlgae1 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 1").value();
+  choreo::Trajectory<choreo::SwerveSample> rightAlgae2 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 2").value();
+  choreo::Trajectory<choreo::SwerveSample> rightAlgae3 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 3").value();
 
   // autonomous routines
   frc2::CommandPtr m_centerAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, centerTraj1, centerTraj2);
   frc2::CommandPtr m_leftAuto = autos::ScoreL4LeftPole(m_drive, m_scoringMech, leftTraj1, leftTraj2);
   frc2::CommandPtr m_rightAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, rightTraj1, rightTraj2);
+  frc2::CommandPtr m_rightAlgaeAuto = autos::RightAlgaeAuto(m_drive, m_scoringMech, rightTraj1, rightTraj2, rightAlgae1, rightAlgae2, rightAlgae3);
 
   frc::SendableChooser<frc2::Command*> m_chooser;
 
