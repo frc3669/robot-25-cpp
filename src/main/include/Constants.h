@@ -13,7 +13,7 @@ namespace SwerveConstants {
     inline constexpr float max_current = 100;
     inline constexpr float feedforward_current = 4;
     inline constexpr float current_headroom = 4;
-    inline constexpr float max_accel = 10;
+    inline constexpr float max_accel = 9;
     inline constexpr float braking_accel = 4;
     inline constexpr float max_m_per_sec_per_cycle = max_accel * MainConst::code_cycle_time;
     inline constexpr float current_to_accel_ratio = 9;

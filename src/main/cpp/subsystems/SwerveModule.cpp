@@ -101,11 +101,11 @@ float SwerveModule::getAccelOvershoot(complex<float> robotVel, float angularVel,
     if (abs(velIncrement) > SwerveConstants::max_m_per_sec_per_cycle) {
         accelOvershoot = abs(velIncrement) / SwerveConstants::max_m_per_sec_per_cycle;
     }
-    float wheelCurrent = am::getProjectionSize(velIncrement/MainConst::code_cycle_time*SwerveConstants::current_to_accel_ratio, vel) + SwerveConstants::feedforward_current;
-    float wheelAccelOvershoot = abs(wheelCurrent) / (SwerveConstants::max_current - SwerveConstants::current_headroom);
-    if (wheelAccelOvershoot > accelOvershoot) {
-        accelOvershoot = wheelAccelOvershoot;
-    }
+    // float wheelCurrent = am::getProjectionSize(velIncrement/MainConst::code_cycle_time*SwerveConstants::current_to_accel_ratio, vel) + SwerveConstants::feedforward_current;
+    // float wheelAccelOvershoot = abs(wheelCurrent) / (SwerveConstants::max_current - SwerveConstants::current_headroom);
+    // if (wheelAccelOvershoot > accelOvershoot) {
+    //     accelOvershoot = wheelAccelOvershoot;
+    // }
     return accelOvershoot;
 }
 
