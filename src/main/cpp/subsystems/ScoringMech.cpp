@@ -66,7 +66,7 @@ void ScoringMech::setEjectAlgaeSpeed() {
   if (getHeight() > 20) {
     algaeScoringMotor.SetControl(controls::DutyCycleOut(-1));
   } else {
-    scoringMotor.SetControl(controls::DutyCycleOut(-0.4));
+    algaeScoringMotor.SetControl(controls::DutyCycleOut(-0.4));
   }
 }
 
@@ -203,7 +203,7 @@ float ScoringMech::getHeight() {
 }
 
 bool ScoringMech::getHeightReached(float height) {
-  return std::abs(getHeight() - height) < 0.5;
+  return std::abs(getHeight() - height) < 1;
 }
 
 float ScoringMech::getCoralAngle() {

@@ -54,6 +54,7 @@ void RobotContainer::ConfigureChooser() {
   m_chooser.AddOption("Left Auto", m_leftAuto.get());
   m_chooser.AddOption("Right Auto", m_rightAuto.get());
   m_chooser.AddOption("Right Algae Auto", m_rightAlgaeAuto.get());
+  m_chooser.AddOption("Center Algae Auto", m_centerAlgaeAuto.get());
   frc::SmartDashboard::PutData(&m_chooser);
 }
 

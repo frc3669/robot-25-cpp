@@ -16,4 +16,10 @@ namespace autos {
         choreo::Trajectory<choreo::SwerveSample> &agaeTraj1,
         choreo::Trajectory<choreo::SwerveSample> &agaeTraj2,
         choreo::Trajectory<choreo::SwerveSample> &agaeTraj3 );
+    frc2::CommandPtr CenterAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
+        choreo::Trajectory<choreo::SwerveSample> &trajectory1,
+        choreo::Trajectory<choreo::SwerveSample> &trajectory2,
+        choreo::Trajectory<choreo::SwerveSample> &agaeTraj1,
+        choreo::Trajectory<choreo::SwerveSample> &agaeTraj2,
+        choreo::Trajectory<choreo::SwerveSample> &agaeTraj3 );
 }
