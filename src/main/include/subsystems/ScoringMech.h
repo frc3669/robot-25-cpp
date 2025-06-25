@@ -22,6 +22,7 @@ class ScoringMech : public frc2::SubsystemBase {
   frc2::CommandPtr intake();
   frc2::CommandPtr coralReset();
   frc2::CommandPtr intakeAlgae();
+  frc2::CommandPtr intakeCoralAlgae();
   frc2::CommandPtr intakeL2_5();
   frc2::CommandPtr intakeL3_5();
   frc2::CommandPtr ejectAlgae();

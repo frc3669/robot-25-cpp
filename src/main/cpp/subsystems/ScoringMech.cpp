@@ -81,7 +81,7 @@ void ScoringMech::stopEverything() {
 
 frc2::CommandPtr ScoringMech::intake() {
   return frc2::cmd::Sequence(
-    setHeightAndAnglesCmd(11, 33.65, 0),
+    setHeightAndAnglesCmd(12, 32, 0),
     RunOnce([this] { setIntakeSpeed(0.25); }),
     frc2::cmd::WaitUntil([this] { return !intakeSensor.Get(); }),
     RunOnce([this] { setIntakeSpeed(-0.1); }),
@@ -111,6 +111,15 @@ frc2::CommandPtr ScoringMech::intakeAlgae() {
   ).WithName("Intaking Algae");
 }
 
+frc2::CommandPtr ScoringMech::intakeCoralAlgae() {
+  return frc2::cmd::Sequence(
+    setHeightAndAnglesCmd(0, 0, 120),
+    RunOnce([this] { setAlgaeIntakeSpeed(0.5); }),
+    frc2::cmd::WaitUntil([this] { return !algaeIntakeSensor.Get(); }),
+    RunOnce([this] { brakeAlgaeIntake(); })
+  ).WithName("Intaking Algae");
+}
+
 frc2::CommandPtr ScoringMech::intakeL2_5() {
   return frc2::cmd::Sequence(
     setHeightAndAnglesCmd(12, 0, 110),
@@ -133,16 +142,17 @@ frc2::CommandPtr ScoringMech::home() {
   return frc2::cmd::Sequence(
     RunOnce([this] { stopEverything(); }),
     setHeightAndAnglesCmd(0,15,0),
-    setHeightAndAnglesCmd(0,0,0)
+    setHeightAndAnglesCmd(0,0,0),
+    RunOnce([this] { elevatorMotor.SetControl(controls::NeutralOut()); })
   ).WithName("Homing");
 }
 
 frc2::CommandPtr ScoringMech::goL4() {
-  return setHeightAndAnglesCmd(44, 95.65, 0).WithName("Going to Level 4");
+  return setHeightAndAnglesCmd(44.5, 95.65, 0).WithName("Going to Level 4");
 }
 
 frc2::CommandPtr ScoringMech::goL3() {
-  return setHeightAndAnglesCmd(6, 151.65, 0).WithName("Going to Level 3");
+  return setHeightAndAnglesCmd(6, 154, 0).WithName("Going to Level 3");
 }
 
 frc2::CommandPtr ScoringMech::goL2() {

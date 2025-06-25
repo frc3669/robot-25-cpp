@@ -47,6 +47,7 @@ void RobotContainer::ConfigureBindings() {
   // autoscore button bindings
   m_XKeys.Button(12).OnTrue(Score::Right(m_drive, m_scoringMech));
   m_XKeys.Button(11).OnTrue(Score::Left(m_drive, m_scoringMech));
+  m_cmdDriverController.Button(3).OnTrue(m_scoringMech.intakeCoralAlgae());
 }
 
 void RobotContainer::ConfigureChooser() {
@@ -55,6 +56,7 @@ void RobotContainer::ConfigureChooser() {
   m_chooser.AddOption("Right Auto", m_rightAuto.get());
   m_chooser.AddOption("Right Algae Auto", m_rightAlgaeAuto.get());
   m_chooser.AddOption("Center Algae Auto", m_centerAlgaeAuto.get());
+  m_chooser.AddOption("Left Algae Auto", m_leftAlgaeAuto.get());
   frc::SmartDashboard::PutData(&m_chooser);
 }
 

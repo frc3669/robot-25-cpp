@@ -13,13 +13,21 @@ namespace autos {
     frc2::CommandPtr RightAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
         choreo::Trajectory<choreo::SwerveSample> &trajectory1,
         choreo::Trajectory<choreo::SwerveSample> &trajectory2,
-        choreo::Trajectory<choreo::SwerveSample> &agaeTraj1,
-        choreo::Trajectory<choreo::SwerveSample> &agaeTraj2,
-        choreo::Trajectory<choreo::SwerveSample> &agaeTraj3 );
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj1,
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj2,
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj3,
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj4 );
     frc2::CommandPtr CenterAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
         choreo::Trajectory<choreo::SwerveSample> &trajectory1,
         choreo::Trajectory<choreo::SwerveSample> &trajectory2,
-        choreo::Trajectory<choreo::SwerveSample> &agaeTraj1,
-        choreo::Trajectory<choreo::SwerveSample> &agaeTraj2,
-        choreo::Trajectory<choreo::SwerveSample> &agaeTraj3 );
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj1,
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj2,
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj3,
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj4 );
+    frc2::CommandPtr LeftAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
+        choreo::Trajectory<choreo::SwerveSample> &trajectory1,
+        choreo::Trajectory<choreo::SwerveSample> &trajectory2,
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj1,
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj2,
+        choreo::Trajectory<choreo::SwerveSample> &algaeTraj3 );
 }

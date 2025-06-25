@@ -36,6 +36,7 @@ class RobotContainer {
  private:
   frc::GenericHID m_driverController{0};
   frc2::CommandGenericHID m_XKeys{1};
+  frc2::CommandGenericHID m_cmdDriverController{0};
   
   // subsystems...
   Swerve m_drive{&m_driverController};
@@ -61,19 +62,30 @@ class RobotContainer {
     choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 2").value();
   choreo::Trajectory<choreo::SwerveSample> rightAlgae3 =
     choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 3").value();
+  choreo::Trajectory<choreo::SwerveSample> rightAlgae4 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 4").value();
   choreo::Trajectory<choreo::SwerveSample> centerAlgae1 =
     choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Algae 1").value();
   choreo::Trajectory<choreo::SwerveSample> centerAlgae2 =
     choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Algae 2").value();
   choreo::Trajectory<choreo::SwerveSample> centerAlgae3 =
     choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Algae 3").value();
+  choreo::Trajectory<choreo::SwerveSample> centerAlgae4 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Algae 4").value();
+  choreo::Trajectory<choreo::SwerveSample> leftAlgae1 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Algae 1").value();
+  choreo::Trajectory<choreo::SwerveSample> leftAlgae2 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Algae 2").value();
+  choreo::Trajectory<choreo::SwerveSample> leftAlgae3 =
+    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Algae 3").value();
 
   // autonomous routines
   frc2::CommandPtr m_centerAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, centerTraj1, centerTraj2);
   frc2::CommandPtr m_leftAuto = autos::ScoreL4LeftPole(m_drive, m_scoringMech, leftTraj1, leftTraj2);
   frc2::CommandPtr m_rightAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, rightTraj1, rightTraj2);
-  frc2::CommandPtr m_rightAlgaeAuto = autos::RightAlgaeAuto(m_drive, m_scoringMech, rightTraj1, rightTraj2, rightAlgae1, rightAlgae2, rightAlgae3);
-  frc2::CommandPtr m_centerAlgaeAuto = autos::CenterAlgaeAuto(m_drive, m_scoringMech, centerTraj1, centerTraj2, centerAlgae1, centerAlgae2, centerAlgae3);
+  frc2::CommandPtr m_rightAlgaeAuto = autos::RightAlgaeAuto(m_drive, m_scoringMech, rightTraj1, rightTraj2, rightAlgae1, rightAlgae2, rightAlgae3, rightAlgae4);
+  frc2::CommandPtr m_centerAlgaeAuto = autos::CenterAlgaeAuto(m_drive, m_scoringMech, centerTraj1, centerTraj2, centerAlgae1, centerAlgae2, centerAlgae3, centerAlgae4);
+  frc2::CommandPtr m_leftAlgaeAuto = autos::LeftAlgaeAuto(m_drive, m_scoringMech, leftTraj1, leftTraj2, leftAlgae1, leftAlgae2, leftAlgae3);
 
   frc::SendableChooser<frc2::Command*> m_chooser;
 

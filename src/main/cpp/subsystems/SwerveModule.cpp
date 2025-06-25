@@ -27,6 +27,7 @@ SwerveModule::SwerveModule(int moduleID, float modulePositionX, float modulePosi
     cfg.CurrentLimits.SupplyCurrentLowerLimit = 20_A;
     cfg.CurrentLimits.SupplyCurrentLowerTime = 0_s;
     cfg.CurrentLimits.SupplyCurrentLimit = 20_A;
+    cfg.CurrentLimits.StatorCurrentLimit = 80_A;
     cfg.MotorOutput.NeutralMode = signals::NeutralModeValue::Brake;
     Util::configureMotor(dMotor, &cfg);
     Util::configureMotor(sMotor, &cfg);
