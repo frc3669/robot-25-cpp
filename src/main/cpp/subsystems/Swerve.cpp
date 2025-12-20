@@ -1,11 +1,16 @@
 #include "subsystems/Swerve.h"
 #include <frc2/command/Commands.h>
+#include <frc/smartdashboard/SmartDashboard.h>
+#include <thread>
 
 using namespace SwerveConstants;
 using namespace DriverControllerConstants;
+using namespace ctre::phoenix6;
 
-Swerve::Swerve(frc::GenericHID *driverController) {
-    this->driverController = driverController;
+
+Swerve::Swerve(int driverControllerPortNum) : 
+        m_driverController(driverControllerPortNum) {
+    // add all the status signals to a list for syncronized updates
 }
 
 void Swerve::SimulationPeriodic() {}
@@ -13,76 +18,37 @@ void Swerve::SimulationPeriodic() {}
 void Swerve::Periodic() {}
 
 void Swerve::driveTeleop() {
-    complex<float> velocity = complex<float>(-driverController->GetRawAxis(1), -driverController->GetRawAxis(0));
-    float angularVelocity = -driverController->GetRawAxis(4);
-    if (driverController->GetRawButton(4)) {
-        gyro.SetYaw(0_deg);
+    complex<double> velocity = complex<double>(-m_driverController.GetRawAxis(1), -m_driverController.GetRawAxis(0));
+    double angularVelocity = -m_driverController.GetRawAxis(4);
+    if (m_driverController.GetRawButton(4)) {
+        resetRotation(0_deg);
     }
     // apply smooth deadband
     if (abs(velocity) > dB) {
         velocity *= (1.0F - dB/abs(velocity))/(1.0F - dB);
-    } else { velocity = complex<float>(0, 0); }
+    } else { velocity = complex<double>(0, 0); }
     if (abs(angularVelocity) > dB) {
         angularVelocity *= (1.0F - dB/abs(angularVelocity))/(1.0F - dB);
     } else { angularVelocity = 0; }
     // autoalign with A and B buttons
-    heading = gyro.GetYaw().GetValueAsDouble()*M_PI/180 + startingAngle;
-    // get complex number for robot orienting and field orienting
-    complex<float> robotOrientMultiplier = polar<float>(1, -heading);
-    if (driverController->GetRawButton(1)) {
-        angularVelocity += getReefAlignmentError() * autoalign_P;
-    } else if (driverController->GetRawButton(2)) {
-        angularVelocity += getFeederStationAlignmentError() * autoalign_P;
+    if (m_driverController.GetRawButton(1)) {
+        angularVelocity += getReefAlignmentError().value() * autoalign_P;
+    } else if (m_driverController.GetRawButton(2)) {
+        angularVelocity += getFeederStationAlignmentError().value() * autoalign_P;
     }
-    // scale the velocities to meters per second
-    velocity *= max_m_per_sec;
-    angularVelocity *= max_m_per_sec;
-    // find the robot oriented velocity
-    complex<float> robotVelocity = velocity * robotOrientMultiplier;
-    // find the fastest module speed
-    float highest = max_m_per_sec;
-    for (auto &module : modules) {
-        float moduleSpeed = abs(module.findModuleVector(robotVelocity, angularVelocity));
-        if (moduleSpeed > highest) { highest = moduleSpeed; }
-    }
-    // normalize the velocities
-    velocity *= max_m_per_sec/highest;
-    angularVelocity *= max_m_per_sec/highest;
-    robotVelocity *= max_m_per_sec/highest;
-    // find error between command and slew velocities
-    complex<float> velocityError = velocity - slewVelocity;
-    float angularVelocityError = angularVelocity - slewAngularVelocity;
-    // find the robot oriented velocity error
-    complex<float> robotVelocityError = velocityError * robotOrientMultiplier;
-    complex<float> robotSlewVelocity = slewVelocity * robotOrientMultiplier;
-    // find the max acceleration overshoot
-    highest = 1;
-    for (auto &module : modules) {
-        float moduleOvershoot = module.getAccelOvershoot(robotSlewVelocity, slewAngularVelocity, robotVelocityError, angularVelocityError);
-        if (moduleOvershoot > highest) { highest = moduleOvershoot; }
-    }
-    // normalize to find velocity increment
-    complex<float> velocityIncrement = velocityError/highest;
-    float angularVelocityIncrement = angularVelocityError/highest;
-    // increment velocity
-    if (abs(velocityError) > max_m_per_sec_per_cycle) {
-        slewVelocity += velocityIncrement;
-    } else {
-        slewVelocity = velocity;
-    }
-    if (abs(angularVelocityError) > max_m_per_sec_per_cycle) {
-        slewAngularVelocity += angularVelocityIncrement;
-    } else {
-        slewAngularVelocity = angularVelocity;
-    }
-    // update the robot oriented slew velocity
-    robotSlewVelocity = slewVelocity * robotOrientMultiplier;
-    // find acceleration feedforward
-    complex<float> robotAccel = robotVelocityError*2.0F;
-    float angularAccel = angularVelocityError*2.0F;
-    // drive the modules
-    for (auto &module : modules) {
-        module.setVelocity(robotSlewVelocity, slewAngularVelocity, robotAccel, angularAccel);
+    velocity *= SwerveConstants::max_m_per_sec.value();
+    angularVelocity *= SwerveConstants::max_rad_per_sec.value();
+    m_rawControllerFieldOrientedSpeeds = frc::ChassisSpeeds{units::velocity::meters_per_second_t{velocity.real()},
+                                                            units::velocity::meters_per_second_t{velocity.imag()},
+                                                            units::angular_velocity::radians_per_second_t{angularVelocity}};
+    frc::ChassisSpeeds robotOrientedSpeeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(m_rawControllerFieldOrientedSpeeds, m_pose.Rotation());
+    auto states = m_kinematics.ToSwerveModuleStates(robotOrientedSpeeds);
+    double desaturationValue = Util::desaturateChassisSpeeds(robotOrientedSpeeds, states);
+    frc::ChassisSpeeds fieldRelativeSpeeds = m_rawControllerFieldOrientedSpeeds * desaturationValue;
+    m_slewLimiter.Run(fieldRelativeSpeeds, SwerveConstants::time_to_full_speed, 0.02_s);
+    states = m_kinematics.ToSwerveModuleStates(frc::ChassisSpeeds::FromFieldRelativeSpeeds(m_slewLimiter.GetSpeeds(), m_pose.Rotation()));
+    for (int i = 0; i < 4; i++) {
+        m_moduleList[i]->setDesiredStateTeleop(states[i]);
     }
 }
 
@@ -91,22 +57,31 @@ frc2::CommandPtr Swerve::defaultDrive() {
 }
 
 void Swerve::moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajectory) {   
-    heading = gyro.GetYaw().GetValueAsDouble()*M_PI/180 + startingAngle;
     if (!autoTimer.HasElapsed(trajectory->GetTotalTime())) {
-        calculateOdometry();
         choreo::SwerveSample currentSample = trajectory->SampleAt(autoTimer.Get()).value();
-        complex<float> positionError = complex<float>(currentSample.x.value(), currentSample.y.value()) - position;
-        float headingError = currentSample.heading.value() - heading;
+        auto positionErrorX = currentSample.x - m_pose.X();
+        auto positionErrorY = currentSample.y - m_pose.Y();
+        auto headingError = currentSample.heading - m_pose.Rotation().Radians();
         am::limit(headingError);
-        complex<float> velocity = complex<float>(currentSample.vx.value(), currentSample.vy.value()) + position_P * positionError;
-        float angularVelocity = currentSample.omega.value() + heading_P * headingError;
-        velocity *= polar<float>(1, -heading);
-        for (auto &module : modules) {
-            module.setVelocity(velocity, angularVelocity, complex<float>(currentSample.ax.value(), currentSample.ay.value()), currentSample.alpha.value());
+        frc::ChassisSpeeds speeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(
+                positionErrorX*position_P/1_s + currentSample.vx,
+                positionErrorY*position_P/1_s + currentSample.vy,
+                headingError*heading_P/1_s + currentSample.omega,
+                m_pose.Rotation());
+        // frc::ChassisSpeeds accelerations = frc::ChassisSpeeds::FromFieldRelativeSpeeds(
+        //         currentSample.ax.value()*1_mps_sq,
+        //         currentSample.ay.value()*1_mps_sq,
+        //         currentSample.alpha.value()*1_rad_per_s_sq,
+        //         m_odometry.GetPose().Rotation());
+        auto moduleStates = m_kinematics.ToSwerveModuleStates(speeds);
+        m_kinematics.DesaturateWheelSpeeds(&moduleStates, max_m_per_sec);
+        // auto moduleAccelerationStates = m_kinematics.ToSwerveModuleStates(accelerations);
+        for (int i = 0; i < 4; i++) {
+            m_moduleList[i]->setDesiredStateTeleop(moduleStates[i]);
         }
     } else {
-        for (auto &module : modules) {
-            module.setVelocity({0,0}, 0, {0,0}, 0);
+        for (auto &module : m_moduleList) {
+            module->brake();
         }
     }
 }
@@ -122,41 +97,25 @@ frc2::CommandPtr Swerve::followTrajectory(choreo::Trajectory<choreo::SwerveSampl
     ).ToPtr().WithName("Following Trajectory");
 }
 
-frc2::CommandPtr Swerve::accelerateForward(float accel) {
-    return Run([this, accel] { testAccel(accel); }).WithName("Accelerating Forward");
-}
-
-frc2::CommandPtr Swerve::accelerateBackward(float accel) {
-    return Run([this, accel] { testAccel(-accel); }).WithName("Accelerating Backward");
-}
-
-void Swerve::simpleDrive(complex<float> velocity) {
-    float moduleSpeed = abs(velocity);
-    if (moduleSpeed > max_m_per_sec) {
-        velocity *= max_m_per_sec/moduleSpeed;
-    }
-    for (auto &module : modules) {
-        module.setVelocity(velocity, 0, {0, 0}, 0);
-    }
-}
-
-void Swerve::testAccel(float accel) {
-    for (auto &module : modules) {
-        module.setAcceleration(accel);
+void Swerve::simpleDrive(frc::ChassisSpeeds robotOrientedSpeeds) {
+    auto states = m_kinematics.ToSwerveModuleStates(robotOrientedSpeeds);
+    m_kinematics.DesaturateWheelSpeeds(&states, max_m_per_sec);
+    for (int i = 0; i < 4; i++) {
+        m_moduleList[i]->setDesiredStateTeleop(states[i]);
     }
 }
 
 void Swerve::brake() {
-    for (auto& module : modules) {
-        module.brake();
+    for (auto &module : m_moduleList) {
+        module->brake();
     }
 }
 
 frc2::CommandPtr Swerve::driveRightToPole() {
     return frc2::FunctionalCommand(
-        [this] { simpleDrive(complex<float>(0, -0.3)); },
-        [this] { simpleDrive(complex<float>(0, -0.3)); },
-        [this] (bool x) { simpleDrive(complex<float>(0, 0)); },
+        [this] { simpleDrive(frc::ChassisSpeeds{0_mps, -0.5_mps, 0_rad_per_s}); },
+        [this] { simpleDrive(frc::ChassisSpeeds{0_mps, -0.5_mps, 0_rad_per_s}); },
+        [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
         [this] { return !poleSensor.Get(); },
         {this}
     ).ToPtr().WithName("Driving to Right Pole");
@@ -164,64 +123,82 @@ frc2::CommandPtr Swerve::driveRightToPole() {
 
 frc2::CommandPtr Swerve::driveLeftToPole() {
     return frc2::FunctionalCommand(
-        [this] { simpleDrive(complex<float>(0, 0.3)); },
-        [this] { simpleDrive(complex<float>(0, 0.3)); },
-        [this] (bool x) { simpleDrive(complex<float>(0, 0)); },
+        [this] { simpleDrive(frc::ChassisSpeeds{0_mps, 0.5_mps, 0_rad_per_s}); },
+        [this] { simpleDrive(frc::ChassisSpeeds{0_mps, 0.5_mps, 0_rad_per_s}); },
+        [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
         [this] { return !poleSensor.Get(); },
         {this}
     ).ToPtr().WithName("Driving to Left Pole");
 }
 
-float Swerve::getReefAlignmentError() {
+units::angle::radian_t Swerve::getReefAlignmentError() {
     for (auto &angle : possibleReefAngles) {
-        float error = angle - heading;
+        auto error = angle - m_pose.Rotation().Radians();
         am::limit(error);
-        if (abs(error) <= M_PI/6) {
+        if (units::math::abs(error) <= 1_rad*M_PI/6) {
             return error;
         }
     }
-    return 0;
+    return 0_rad;
 }
 
-float Swerve::getFeederStationAlignmentError() {
-    float error1 = possibleFeederStationAngles[0] - heading;
+units::angle::radian_t Swerve::getFeederStationAlignmentError() {
+    auto error1 = possibleFeederStationAngles[0] - m_pose.Rotation().Radians();
     am::limit(error1);
-    float error2 = possibleFeederStationAngles[1] - heading;
+    auto error2 = possibleFeederStationAngles[1] - m_pose.Rotation().Radians();
     am::limit(error2);
-    if (abs(error1) < abs(error2)) {
+    if (units::math::abs(error1) < units::math::abs(error2)) {
         return error1;
     }
     return error2;
 }
 
-void Swerve::resetPosition(complex<float> position) {
-    for (auto &module : modules) {
-        module.resetEncoders();
+void Swerve::resetPosition(frc::Translation2d newTranslation) {
+    m_pose = {newTranslation, m_pose.Rotation()};
+}
+
+void Swerve::resetRotation(frc::Rotation2d newRotation) {
+    m_gyroOffset = m_gyroAngle - newRotation.Degrees();
+    m_pose = {m_pose.Translation(), newRotation};
+    
+}
+
+void Swerve::resetPose(frc::Pose2d newPose) {
+    resetPosition(newPose.Translation());
+    resetRotation(newPose.Rotation());
+}
+
+frc2::CommandPtr Swerve::resetPositionCmd(frc::Translation2d newTranslation) {
+    return RunOnce([this, newTranslation] { resetPosition(newTranslation); }).WithName("Resetting Position to Specified Value");
+}
+
+frc2::CommandPtr Swerve::resetPoseCmd(frc::Pose2d newPose) {
+    return RunOnce([this, newPose] { resetPose(newPose); }).WithName("Resetting Pose to Specified Value");
+}
+
+void Swerve::OdometryThread() {
+    while (true) {
+        m_gyroAngle = gyro.GetYaw().GetValue();
+        m_pose = {m_pose.Translation(), m_gyroAngle - m_gyroOffset};
+        frc::Translation2d deltaTranslationAverage{};
+        for (auto & module : m_moduleList) {
+            deltaTranslationAverage = deltaTranslationAverage + module->GetDeltaTranslation();
+        }
+        deltaTranslationAverage = deltaTranslationAverage * 0.25;
+        deltaTranslationAverage.RotateBy(m_pose.Rotation());
+        m_pose = m_pose + frc::Transform2d{deltaTranslationAverage, 0_deg};
+        frc::SmartDashboard::PutNumber("swerve angle", m_pose.Rotation().Degrees().value());
+        frc::SmartDashboard::PutNumber("swerve position x", m_pose.X().value());
+        frc::SmartDashboard::PutNumber("swerve position y", m_pose.Y().value());
+        this_thread::sleep_for(chrono::milliseconds(5));
     }
-    this->position = position;
 }
 
-void Swerve::resetPose(complex<float> position, float angle) {
-    resetPosition(position);
-    startingAngle = angle;
-}
-
-frc2::CommandPtr Swerve::resetPositionCmd(complex<float> position) {
-    return RunOnce([this, position] { resetPosition(position); }).WithName("Resetting Position to Specified Value");
-}
-
-frc2::CommandPtr Swerve::resetPoseCmd(complex<float> position, float angle) {
-    return RunOnce([this, position, angle] { resetPose(position, angle); }).WithName("Resetting Pose to Specified Value");
-}
-
-void Swerve::calculateOdometry() {
-    complex<float> positionChange = complex<float>(0, 0);
-    for (auto &module : modules) {
-        positionChange += module.getPositionChange();
+void Swerve::InitializeOdometry() {
+    for (auto & module : m_moduleList) {
+        module->InitializeOdometry();
     }
-    position += positionChange * polar<float>(0.25, heading);
-}
-
-void Swerve::addModule(SwerveModule &module) {
-    modules.push_back(module);
+    resetRotation(0_deg);
+    std::thread odometryThread(&Swerve::OdometryThread, this);
+    odometryThread.detach();
 }

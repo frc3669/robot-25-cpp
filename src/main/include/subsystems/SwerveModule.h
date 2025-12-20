@@ -1,32 +1,33 @@
 #pragma once
 #include <ctre/phoenix6/CANcoder.hpp>
 #include <ctre/phoenix6/TalonFX.hpp>
+#include <ctre/phoenix6/StatusSignal.hpp>
 #include <complex.h>
 #include "angleMath.h"
+#include "frc/kinematics/SwerveModulePosition.h"
+#include "frc/kinematics/SwerveModuleState.h"
+#include "frc/controller/PIDController.h"
+#include "frc/controller/ProfiledPIDController.h"
+#include "frc/controller/SimpleMotorFeedforward.h"
 
 class SwerveModule {
   public:
-    SwerveModule(int moduleID, float modulePositionX, float modulePositionY);
+    SwerveModule(int moduleID);
     void setVelocity(complex<float> robotVel, float angularVel, complex<float> robotAccel, float angularAccel);
-    void setAcceleration(float accel);
     void brake();
-    complex<float> findModuleVector(complex<float> robotVec, float angularVec);
-    float getAccelOvershoot(complex<float> robotVel, float angularVel, complex<float> robotVelIncrement, float angularVelIncrement);
-    complex<float> getPositionChange();
     void resetEncoders();
-    void init();
+    frc::SwerveModulePosition GetPosition();
+    frc::Translation2d GetDeltaTranslation();
+    void InitializeOdometry();
+    void setDesiredStateTeleop(frc::SwerveModuleState & referenceState);
+    void setDesiredStateAutonomous(frc::SwerveModuleState & referenceState, frc::SwerveModuleState & referenceAccelerationState);
 
   private:
-    void odometryCalc();
-    float getAccelCurrent(complex<float> accelCurrentVector, float wheelAngle);
-    ctre::phoenix6::hardware::TalonFX *dMotor;
-    ctre::phoenix6::hardware::TalonFX *sMotor;
-    ctre::phoenix6::hardware::CANcoder *encoder;
+    int m_moduleID;
+    ctre::phoenix6::hardware::TalonFX m_driveMotor;
+    ctre::phoenix6::hardware::TalonFX m_steeringMotor;
+    ctre::phoenix6::hardware::CANcoder m_encoder;
 	  ctre::phoenix6::controls::VelocityTorqueCurrentFOC m_velocity{0_tps};
 	  ctre::phoenix6::controls::TorqueCurrentFOC m_torque{0_A};
-    complex<float> turnVector;
-    complex<float> posChg = complex<float>(0,0);
-    float motorPosOld = 0;
-    float angle = 0;
-    int moduleID;
+    units::meter_t lastWheelDistance = 0_m;
 };

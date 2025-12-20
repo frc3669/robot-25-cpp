@@ -5,12 +5,12 @@
 frc2::CommandPtr autos::ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech, choreo::Trajectory<choreo::SwerveSample> &trajectory1, choreo::Trajectory<choreo::SwerveSample> &trajectory2) {
   auto initialPose = trajectory1.GetInitialPose().value();
   auto traj2InitialPose = trajectory2.GetInitialPose().value();
-  return drive.resetPoseCmd(complex<float>(initialPose.X().value(), initialPose.Y().value()), initialPose.Rotation().Radians().value())
+  return drive.resetPoseCmd(initialPose)
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(&trajectory1),
       scoringMech.goL4()))
     .AndThen(Score::Left(drive, scoringMech))
-    .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
+    .AndThen(drive.resetPositionCmd(traj2InitialPose.Translation()))
     .AndThen(drive.followTrajectory(&trajectory2))
     .AndThen(scoringMech.home());
 }
@@ -18,12 +18,12 @@ frc2::CommandPtr autos::ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech,
 frc2::CommandPtr autos::ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech, choreo::Trajectory<choreo::SwerveSample> &trajectory1, choreo::Trajectory<choreo::SwerveSample> &trajectory2) {
   auto initialPose = trajectory1.GetInitialPose().value();
   auto traj2InitialPose = trajectory2.GetInitialPose().value();
-  return drive.resetPoseCmd(complex<float>(initialPose.X().value(), initialPose.Y().value()), initialPose.Rotation().Radians().value())
+  return drive.resetPoseCmd(initialPose)
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(&trajectory1),
       scoringMech.goL4()))
     .AndThen(Score::Right(drive, scoringMech))
-    .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
+    .AndThen(drive.resetPositionCmd(traj2InitialPose.Translation()))
     .AndThen(drive.followTrajectory(&trajectory2))
     
     .AndThen(scoringMech.home());
@@ -38,12 +38,12 @@ frc2::CommandPtr autos::RightAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
         choreo::Trajectory<choreo::SwerveSample> &algaeTraj4 ) {
   auto initialPose = trajectory1.GetInitialPose().value();
   auto traj2InitialPose = trajectory2.GetInitialPose().value();
-  return drive.resetPoseCmd(complex<float>(initialPose.X().value(), initialPose.Y().value()), initialPose.Rotation().Radians().value())
+  return drive.resetPoseCmd(initialPose)
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(&trajectory1),
       scoringMech.goL4()))
     .AndThen(Score::Right(drive, scoringMech))
-    .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
+    .AndThen(drive.resetPositionCmd(traj2InitialPose.Translation()))
     .AndThen(drive.followTrajectory(&trajectory2))
     .AndThen(frc2::cmd::Parallel(
              frc2::cmd::Sequence(drive.followTrajectory(&algaeTraj1),
@@ -66,12 +66,12 @@ frc2::CommandPtr autos::CenterAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
         choreo::Trajectory<choreo::SwerveSample> &algaeTraj4 ) {
   auto initialPose = trajectory1.GetInitialPose().value();
   auto traj2InitialPose = trajectory2.GetInitialPose().value();
-  return drive.resetPoseCmd(complex<float>(initialPose.X().value(), initialPose.Y().value()), initialPose.Rotation().Radians().value())
+  return drive.resetPoseCmd(initialPose)
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(&trajectory1),
       scoringMech.goL4()))
     .AndThen(Score::Right(drive, scoringMech))
-    .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
+    .AndThen(drive.resetPositionCmd(traj2InitialPose.Translation()))
     .AndThen(drive.followTrajectory(&trajectory2))
     .AndThen(frc2::cmd::Parallel(
              frc2::cmd::Sequence(drive.followTrajectory(&algaeTraj1),
@@ -93,12 +93,12 @@ frc2::CommandPtr autos::LeftAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
         choreo::Trajectory<choreo::SwerveSample> &algaeTraj3 ) {
   auto initialPose = trajectory1.GetInitialPose().value();
   auto traj2InitialPose = trajectory2.GetInitialPose().value();
-  return drive.resetPoseCmd(complex<float>(initialPose.X().value(), initialPose.Y().value()), initialPose.Rotation().Radians().value())
+  return drive.resetPoseCmd(initialPose)
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(&trajectory1),
       scoringMech.goL4()))
     .AndThen(Score::Left(drive, scoringMech))
-    .AndThen(drive.resetPositionCmd(complex<float>(traj2InitialPose.X().value(), traj2InitialPose.Y().value())))
+    .AndThen(drive.resetPositionCmd(traj2InitialPose.Translation()))
     .AndThen(drive.followTrajectory(&trajectory2))
     .AndThen(frc2::cmd::Parallel(
              frc2::cmd::Sequence(drive.followTrajectory(&algaeTraj1),

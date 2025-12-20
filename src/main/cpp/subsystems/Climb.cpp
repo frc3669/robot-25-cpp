@@ -11,7 +11,7 @@ using namespace ctre::phoenix6;
 Climb::Climb() {
     configs::TalonFXConfiguration cfg{};
     cfg.MotorOutput.NeutralMode = signals::NeutralModeValue::Brake;
-    Util::configureMotor(&mClimb, &cfg);
+    Util::configureMotor(mClimb, cfg);
 }
 
 frc2::CommandPtr Climb::extend() {

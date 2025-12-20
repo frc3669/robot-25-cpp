@@ -280,9 +280,9 @@ void ScoringMech::configureMotors() {
   algaeScoringCfg.Commutation.MotorArrangement = signals::MotorArrangementValue::Minion_JST;
   algaeScoringCfg.MotorOutput.NeutralMode = signals::NeutralModeValue::Brake;
   // apply the configurations
-  Util::configureMotor(&coralAngleMotor, &coralAngleCfg);
-  Util::configureMotor(&algaeAngleMotor, &algaeAngleCfg);
-  Util::configureMotor(&elevatorMotor, &elevatorCfg);
-  Util::configureMotor(&scoringMotor, &scoringCfg);
-  Util::configureMotor(&algaeScoringMotor, &algaeScoringCfg);
+  Util::configureMotor(coralAngleMotor, coralAngleCfg);
+  Util::configureMotor(algaeAngleMotor, algaeAngleCfg);
+  Util::configureMotor(elevatorMotor, elevatorCfg);
+  Util::configureMotor(scoringMotor, scoringCfg);
+  Util::configureMotor(algaeScoringMotor, algaeScoringCfg);
 }

@@ -6,6 +6,7 @@
 #include <frc/GenericHID.h>
 #include <frc/smartdashboard/SendableChooser.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/kinematics/SwerveDriveKinematics.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandJoystick.h>
 
@@ -30,6 +31,7 @@ class RobotContainer {
   void ConfigureChooser();
   void ConfigureDefaultCommands();
   void DisplaySchedulerDetails();
+  void InitializeOdometry();
   
   ScoringMech m_scoringMech{&m_XKeys};
 
@@ -39,7 +41,7 @@ class RobotContainer {
   frc2::CommandGenericHID m_cmdDriverController{0};
   
   // subsystems...
-  Swerve m_drive{&m_driverController};
+  Swerve m_drive{0};
   Climb m_climber{};
 
 

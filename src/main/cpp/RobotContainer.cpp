@@ -5,19 +5,13 @@
 #include "RobotContainer.h"
 
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/kinematics/ChassisSpeeds.h>
 #include <frc2/command/button/Trigger.h>
 #include "commands/Score.h"
 #include "commands/Autos.h"
 
 RobotContainer::RobotContainer() {
-  SwerveModule module1{1, 1, 1};
-  SwerveModule module2{2, -1, 1};
-  SwerveModule module3{3, -1, -1};
-  SwerveModule module4{4, 1, -1};
-  m_drive.addModule(module1);
-  m_drive.addModule(module2);
-  m_drive.addModule(module3);
-  m_drive.addModule(module4);
+
 
   // Configure the button bindings
   ConfigureBindings();
@@ -75,4 +69,8 @@ void RobotContainer::DisplaySchedulerDetails() {
   frc::SmartDashboard::PutData("Swerve Status", &m_drive);
   frc::SmartDashboard::PutData("Scoring Mechanism Status", &m_scoringMech);
   frc::SmartDashboard::PutData("Climb Status", &m_climber);
+}
+
+void RobotContainer::InitializeOdometry() {
+  m_drive.InitializeOdometry();
 }

@@ -13,6 +13,7 @@ Robot::Robot() {
 }
 
 void Robot::RobotInit() {
+  m_container.InitializeOdometry();
 }
 
 /**
