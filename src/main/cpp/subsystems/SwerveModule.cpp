@@ -15,6 +15,8 @@ SwerveModule::SwerveModule(int moduleID) :
         m_moduleID(moduleID), m_driveMotor(10 + moduleID, "CTREdevices"),
         m_steeringMotor(20 + moduleID, "CTREdevices"),
         m_encoder(30 + moduleID, "CTREdevices") {
+    m_driveMotorTurns = new StatusSignal(m_driveMotor.GetPosition());
+    m_encoderTurns = new StatusSignal(m_encoder.GetAbsolutePosition());
     configs::TalonFXConfiguration cfg{};
     cfg.Slot0.kP = 5;
     cfg.Slot0.kS = 3;
@@ -31,7 +33,7 @@ SwerveModule::SwerveModule(int moduleID) :
 }
 
 void SwerveModule::setDesiredStateAutonomous(frc::SwerveModuleState & referenceState, frc::SwerveModuleState & referenceAccelerationState) {
-    units::degree_t encoderAngle{m_encoder.GetAbsolutePosition().GetValue()};
+    units::degree_t encoderAngle{m_encoderTurns->GetValue()};
     auto targetAngle = referenceState.angle.Degrees();
     auto angleError = targetAngle-encoderAngle;
     am::limit(angleError);
@@ -49,7 +51,7 @@ void SwerveModule::setDesiredStateAutonomous(frc::SwerveModuleState & referenceS
 
 void SwerveModule::setDesiredStateTeleop(frc::SwerveModuleState & referenceState) {
     
-    units::degree_t encoderAngle{m_encoder.GetAbsolutePosition().GetValue()};
+    units::degree_t encoderAngle{m_encoderTurns->GetValue()};
     auto targetAngle = referenceState.angle.Degrees();
     auto angleError = targetAngle-encoderAngle;
     am::limit(angleError);
@@ -59,19 +61,9 @@ void SwerveModule::setDesiredStateTeleop(frc::SwerveModuleState & referenceState
         angleError += 180_deg;
         am::limit(angleError);
     }
-    // referenceState.Optimize(encoderRotation);
-    // referenceState.CosineScale(encoderRotation);
-    // const auto steeringOutput = m_steeringPIDController.Calculate(
-    //     encoderRotation.Radians(),
-    //     referenceState.angle.Radians());
-    // const auto steeringFeedforward = m_steeringFeedforward.Calculate(
-    //     m_steeringPIDController.GetSetpoint().velocity);
     m_steeringMotor.SetControl(controls::DutyCycleOut(angleError/180_deg));
     m_driveMotor.SetControl(m_velocity
         .WithVelocity(moduleSpeed.value()*SwerveConstants::motor_turns_per_m*1_tps));
-    frc::SmartDashboard::PutNumber("module"+std::to_string(m_moduleID)+" state angle", referenceState.angle.Degrees().value());
-    frc::SmartDashboard::PutNumber("module"+std::to_string(m_moduleID)+" state speed", referenceState.speed.value());
-    frc::SmartDashboard::PutNumber("module"+std::to_string(m_moduleID)+" state wheel angle", m_encoder.GetAbsolutePosition().GetValueAsDouble());
 }
 
 // set the drive motor to brake mode
@@ -81,18 +73,23 @@ void SwerveModule::brake() {
 }
 
 frc::SwerveModulePosition SwerveModule::GetPosition() {
-    return {units::meter_t{m_driveMotor.GetPosition().GetValueAsDouble()/SwerveConstants::motor_turns_per_m},
-            units::radian_t{m_encoder.GetAbsolutePosition().GetValueAsDouble()}};
+    return {units::meter_t{m_driveMotorTurns->GetValueAsDouble()/SwerveConstants::motor_turns_per_m},
+            units::radian_t{m_encoderTurns->GetValueAsDouble()}};
 }
 
 void SwerveModule::InitializeOdometry() {
-    lastWheelDistance = units::meter_t{m_driveMotor.GetPosition().GetValue().value() / SwerveConstants::motor_turns_per_m};
+    lastWheelDistance = units::meter_t{m_driveMotorTurns->GetValueAsDouble() / SwerveConstants::motor_turns_per_m};
 }
 
 frc::Translation2d SwerveModule::GetDeltaTranslation() {
-    auto angle = m_encoder.GetAbsolutePosition().GetValue();
-    auto wheelDistance = units::meter_t{m_driveMotor.GetPosition().GetValue().value() / SwerveConstants::motor_turns_per_m};
+    auto angle = m_encoderTurns->GetValue();
+    auto wheelDistance = units::meter_t{m_driveMotorTurns->GetValueAsDouble() / SwerveConstants::motor_turns_per_m};
     auto deltaPosition = wheelDistance - lastWheelDistance;
     lastWheelDistance = wheelDistance;
     return {deltaPosition*units::math::cos(angle), deltaPosition*units::math::sin(angle)};
+}
+
+SwerveModule::~SwerveModule() {
+    delete m_driveMotorTurns;
+    delete m_encoderTurns;
 }

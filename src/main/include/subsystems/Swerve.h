@@ -4,8 +4,6 @@
 #include <frc/DigitalInput.h>
 #include <frc/GenericHID.h>
 #include <frc/kinematics/SwerveDriveKinematics.h>
-#include <frc/kinematics/SwerveDriveOdometry.h>
-#include <frc/controller/RamseteController.h>
 #include <frc/filter/SlewRateLimiter.h>
 #include <ctre/phoenix6/Pigeon2.hpp>
 #include <ctre/phoenix6/StatusSignal.hpp>
@@ -15,6 +13,7 @@
 #include "choreo/Choreo.h"
 #include "Constants.h"
 #include "util.h"
+#include <LimelightHelpers.h>
 
 class Swerve : public frc2::SubsystemBase {
   public:
@@ -30,11 +29,12 @@ class Swerve : public frc2::SubsystemBase {
     frc2::CommandPtr resetPositionCmd(frc::Translation2d newTranslation);
     void RunOdometry();
     void InitializeOdometry();
+    ~Swerve();
     
   private:
     frc::GenericHID m_driverController;
     ctre::phoenix6::hardware::Pigeon2 gyro{1, "CTREdevices"};
-    ctre::phoenix6::StatusSignal<units::angle::degree_t> m_gyroAngleSignal{gyro.GetYaw()};
+    ctre::phoenix6::StatusSignal<units::angle::degree_t> * m_gyroAngleSignal;
     std::vector<ctre::phoenix6::BaseStatusSignal*> m_statusSignals;
     frc::DigitalInput poleSensor{1};
     frc::Timer autoTimer;
@@ -58,11 +58,15 @@ class Swerve : public frc2::SubsystemBase {
     units::velocity::meters_per_second_t m_xVelocity, m_yVelocity;
     units::angular_velocity::radians_per_second_t m_angularRate;
     frc::Pose2d m_pose;
+    frc::Pose2d m_lastLimelightPose;
     units::degree_t m_gyroAngle;
     units::degree_t m_gyroOffset;
     units::angle::radian_t possibleReefAngles[6] = {0_rad, 1_rad*M_PI/3, 2_rad*M_PI/3, 1_rad*M_PI, 4_rad*M_PI/3, 5_rad*M_PI/3};
     units::angle::radian_t possibleFeederStationAngles[2] = {2.1995556168958954_rad, -2.1995556168958954_rad};
-    
+    frc::Translation2d m_pastTranslations[100];
+    int m_validPastTranslationCount = 0;
+    int m_currentTranslationIndex = 0;
+
     void moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajectory);
     units::angle::radian_t getReefAlignmentError();
     units::angle::radian_t getFeederStationAlignmentError();

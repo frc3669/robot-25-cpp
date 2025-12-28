@@ -7,13 +7,11 @@
 #include "frc/kinematics/SwerveModulePosition.h"
 #include "frc/kinematics/SwerveModuleState.h"
 #include "frc/controller/PIDController.h"
-#include "frc/controller/ProfiledPIDController.h"
-#include "frc/controller/SimpleMotorFeedforward.h"
+#include "frc/geometry/Translation2d.h"
 
 class SwerveModule {
   public:
     SwerveModule(int moduleID);
-    void setVelocity(complex<float> robotVel, float angularVel, complex<float> robotAccel, float angularAccel);
     void brake();
     void resetEncoders();
     frc::SwerveModulePosition GetPosition();
@@ -21,6 +19,10 @@ class SwerveModule {
     void InitializeOdometry();
     void setDesiredStateTeleop(frc::SwerveModuleState & referenceState);
     void setDesiredStateAutonomous(frc::SwerveModuleState & referenceState, frc::SwerveModuleState & referenceAccelerationState);
+    ~SwerveModule();
+    
+    ctre::phoenix6::StatusSignal<units::angle::turn_t> * m_driveMotorTurns;
+    ctre::phoenix6::StatusSignal<units::angle::turn_t> * m_encoderTurns;
 
   private:
     int m_moduleID;

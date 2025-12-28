@@ -11,6 +11,13 @@ using namespace ctre::phoenix6;
 Swerve::Swerve(int driverControllerPortNum) : 
         m_driverController(driverControllerPortNum) {
     // add all the status signals to a list for syncronized updates
+    m_gyroAngleSignal = new StatusSignal(gyro.GetYaw());
+    m_statusSignals.push_back(m_gyroAngleSignal);
+    for (auto & module : m_moduleList) {
+        m_statusSignals.push_back(module->m_driveMotorTurns);
+        m_statusSignals.push_back(module->m_encoderTurns);
+    }
+    BaseStatusSignal::SetUpdateFrequencyForAll(200_Hz, m_statusSignals);
 }
 
 void Swerve::SimulationPeriodic() {}
@@ -28,7 +35,7 @@ void Swerve::driveTeleop() {
         velocity *= (1.0F - dB/abs(velocity))/(1.0F - dB);
     } else { velocity = complex<double>(0, 0); }
     if (abs(angularVelocity) > dB) {
-        angularVelocity *= (1.0F - dB/abs(angularVelocity))/(1.0F - dB);
+        angularVelocity *= (1.0 - dB/abs(angularVelocity))/(1.0 - dB);
     } else { angularVelocity = 0; }
     // autoalign with A and B buttons
     if (m_driverController.GetRawButton(1)) {
@@ -87,7 +94,6 @@ void Swerve::moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajecto
 }
 
 frc2::CommandPtr Swerve::followTrajectory(choreo::Trajectory<choreo::SwerveSample> *trajectory) {
-
     return frc2::FunctionalCommand(
         [this] { this->autoTimer.Restart(); },
         [this, trajectory] { moveToNextSample(trajectory); },
@@ -178,7 +184,8 @@ frc2::CommandPtr Swerve::resetPoseCmd(frc::Pose2d newPose) {
 
 void Swerve::OdometryThread() {
     while (true) {
-        m_gyroAngle = gyro.GetYaw().GetValue();
+        BaseStatusSignal::WaitForAll(10_ms, m_statusSignals);
+        m_gyroAngle = m_gyroAngleSignal->GetValue();
         m_pose = {m_pose.Translation(), m_gyroAngle - m_gyroOffset};
         frc::Translation2d deltaTranslationAverage{};
         for (auto & module : m_moduleList) {
@@ -187,10 +194,31 @@ void Swerve::OdometryThread() {
         deltaTranslationAverage = deltaTranslationAverage * 0.25;
         deltaTranslationAverage.RotateBy(m_pose.Rotation());
         m_pose = m_pose + frc::Transform2d{deltaTranslationAverage, 0_deg};
-        frc::SmartDashboard::PutNumber("swerve angle", m_pose.Rotation().Degrees().value());
-        frc::SmartDashboard::PutNumber("swerve position x", m_pose.X().value());
-        frc::SmartDashboard::PutNumber("swerve position y", m_pose.Y().value());
-        this_thread::sleep_for(chrono::milliseconds(5));
+        // Get the pose estimate
+        LimelightHelpers::PoseEstimate limelightMeasurement = LimelightHelpers::getBotPoseEstimate_wpiBlue_MegaTag2("");
+        m_pastTranslations[m_currentTranslationIndex] = m_pose.Translation();
+        if (m_validPastTranslationCount < 100) {
+            m_validPastTranslationCount++;
+        }
+        if (limelightMeasurement.pose != m_lastLimelightPose && limelightMeasurement.tagCount != 0) {
+            double latency = LimelightHelpers::getLatency_Capture() + LimelightHelpers::getLatency_Pipeline();
+            int compensationCycles = latency*0.2;
+            if (compensationCycles > m_validPastTranslationCount-1) {
+                compensationCycles = m_validPastTranslationCount-1;
+            }
+            if (compensationCycles > 99) {
+                compensationCycles = 99;
+            }
+            frc::Translation2d distanceSinceCapture = m_pastTranslations[m_currentTranslationIndex]
+                                                    - m_pastTranslations[(m_currentTranslationIndex - compensationCycles + 100) % 100];
+            m_pose = frc::Pose2d{limelightMeasurement.pose.Translation() + distanceSinceCapture, m_pose.Rotation()};
+            m_validPastTranslationCount = 0;
+            m_lastLimelightPose = limelightMeasurement.pose;
+        }
+        m_currentTranslationIndex++;
+        if (m_currentTranslationIndex > 99) {
+            m_currentTranslationIndex = 0;
+        }
     }
 }
 
@@ -199,6 +227,12 @@ void Swerve::InitializeOdometry() {
         module->InitializeOdometry();
     }
     resetRotation(0_deg);
+    LimelightHelpers::SetRobotOrientation("", m_pose.Rotation().Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
+    LimelightHelpers::SetIMUMode("", 3);
     std::thread odometryThread(&Swerve::OdometryThread, this);
     odometryThread.detach();
+}
+
+Swerve::~Swerve() {
+    delete m_gyroAngleSignal;
 }

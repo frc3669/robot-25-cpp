@@ -8,7 +8,7 @@ namespace MainConst {
 }
 
 namespace DriverControllerConstants {
-    inline constexpr float dB = 0.1;
+    inline constexpr double dB = 0.1;
 }
 
 // constants for the swerve
