@@ -4,7 +4,6 @@
 #include <frc/DigitalInput.h>
 #include <frc/GenericHID.h>
 #include <frc/kinematics/SwerveDriveKinematics.h>
-#include <frc/filter/SlewRateLimiter.h>
 #include <ctre/phoenix6/Pigeon2.hpp>
 #include <ctre/phoenix6/StatusSignal.hpp>
 #include "subsystems/SwerveModule.h"
@@ -59,6 +58,7 @@ class Swerve : public frc2::SubsystemBase {
     units::angular_velocity::radians_per_second_t m_angularRate;
     frc::Pose2d m_pose;
     frc::Pose2d m_lastLimelightPose;
+    frc::Pose2d m_targetPose;
     units::degree_t m_gyroAngle;
     units::degree_t m_gyroOffset;
     units::angle::radian_t possibleReefAngles[6] = {0_rad, 1_rad*M_PI/3, 2_rad*M_PI/3, 1_rad*M_PI, 4_rad*M_PI/3, 5_rad*M_PI/3};
@@ -68,6 +68,8 @@ class Swerve : public frc2::SubsystemBase {
     int m_currentTranslationIndex = 0;
 
     void moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajectory);
+    void driveToTargetPose();
+    bool targetPoseReached();
     units::angle::radian_t getReefAlignmentError();
     units::angle::radian_t getFeederStationAlignmentError();
     void resetPosition(frc::Translation2d newTranslation);
@@ -75,5 +77,6 @@ class Swerve : public frc2::SubsystemBase {
     void resetPose(frc::Pose2d newPose);
     void driveTeleop();
     void simpleDrive(frc::ChassisSpeeds robotOrientedSpeeds);
+    void setCoralScoringTargetPose(bool isLeft);
     void OdometryThread();
 };

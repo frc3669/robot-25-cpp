@@ -4,6 +4,7 @@
 #include <thread>
 
 using namespace SwerveConstants;
+using namespace MainConst;
 using namespace DriverControllerConstants;
 using namespace ctre::phoenix6;
 
@@ -93,6 +94,24 @@ void Swerve::moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajecto
     }
 }
 
+void Swerve::driveToTargetPose() {
+    auto error = m_targetPose - m_pose;
+    frc::ChassisSpeeds speeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(
+            error.X()*position_P/1_s,
+            error.Y()*position_P/1_s,
+            error.Rotation().Radians()*heading_P/1_s,
+            m_pose.Rotation());
+    auto moduleStates = m_kinematics.ToSwerveModuleStates(speeds);
+    m_kinematics.DesaturateWheelSpeeds(&moduleStates, max_limelight_m_per_sec);
+    for (int i = 0; i < 4; i++) {
+        m_moduleList[i]->setDesiredStateTeleop(moduleStates[i]);
+    }
+}
+
+bool Swerve::targetPoseReached() {
+    return m_targetPose.Translation().Distance(m_pose.Translation()) < 1_in;
+}
+
 frc2::CommandPtr Swerve::followTrajectory(choreo::Trajectory<choreo::SwerveSample> *trajectory) {
     return frc2::FunctionalCommand(
         [this] { this->autoTimer.Restart(); },
@@ -119,20 +138,20 @@ void Swerve::brake() {
 
 frc2::CommandPtr Swerve::driveRightToPole() {
     return frc2::FunctionalCommand(
-        [this] { simpleDrive(frc::ChassisSpeeds{0_mps, -0.5_mps, 0_rad_per_s}); },
-        [this] { simpleDrive(frc::ChassisSpeeds{0_mps, -0.5_mps, 0_rad_per_s}); },
+        [this] { setCoralScoringTargetPose(false); },
+        [this] { driveToTargetPose(); },
         [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
-        [this] { return !poleSensor.Get(); },
+        [this] { return targetPoseReached(); },
         {this}
     ).ToPtr().WithName("Driving to Right Pole");
 }
 
 frc2::CommandPtr Swerve::driveLeftToPole() {
     return frc2::FunctionalCommand(
-        [this] { simpleDrive(frc::ChassisSpeeds{0_mps, 0.5_mps, 0_rad_per_s}); },
+        [this] { setCoralScoringTargetPose(true); },
         [this] { simpleDrive(frc::ChassisSpeeds{0_mps, 0.5_mps, 0_rad_per_s}); },
         [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
-        [this] { return !poleSensor.Get(); },
+        [this] { return targetPoseReached(); },
         {this}
     ).ToPtr().WithName("Driving to Left Pole");
 }
@@ -157,6 +176,29 @@ units::angle::radian_t Swerve::getFeederStationAlignmentError() {
         return error1;
     }
     return error2;
+}
+
+void Swerve::setCoralScoringTargetPose(bool isLeft) {
+    frc::Translation2d translationFromBlueReef = m_pose.Translation() - blueReefTranslation;
+    frc::Translation2d translationFromRedReef = m_pose.Translation() - redReefTranslation;
+    frc::Pose2d targetPose;
+    if (translationFromBlueReef.Norm() < 2.5_m) {
+        auto reefSideAngle = frc::Rotation2d{60_deg * int((translationFromBlueReef.Angle().Degrees().value() + 390)/60)};
+        auto targetTranslation = blueReefTranslation + frc::Translation2d{units::meter_t{reefSideAngle.Cos()}, units::meter_t{reefSideAngle.Sin()}} * reefToRobotDistance;
+        auto targetRotation = frc::Rotation2d{reefSideAngle} + frc::Rotation2d{180_deg};
+        targetPose = frc::Pose2d{targetTranslation, targetRotation};
+    }
+    if (translationFromRedReef.Norm() < 2.5_m) {
+        auto reefSideAngle = frc::Rotation2d{60_deg * int((translationFromRedReef.Angle().Degrees().value() + 390)/60)};
+        auto targetTranslation = redReefTranslation + frc::Translation2d{units::meter_t{reefSideAngle.Cos()}, units::meter_t{reefSideAngle.Sin()}} * reefToRobotDistance;
+        auto targetRotation = frc::Rotation2d{reefSideAngle} + frc::Rotation2d{180_deg};
+        targetPose = frc::Pose2d{targetTranslation, targetRotation};
+    }
+    if (isLeft) {
+        m_targetPose = targetPose + frc::Transform2d{-6.5_in*targetPose.Rotation().Sin(), 6.5_in*targetPose.Rotation().Cos(), 0_deg};
+    } else {
+        m_targetPose = targetPose + frc::Transform2d{6.5_in*targetPose.Rotation().Sin(), -6.5_in*targetPose.Rotation().Cos(), 0_deg};
+    }
 }
 
 void Swerve::resetPosition(frc::Translation2d newTranslation) {

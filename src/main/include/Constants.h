@@ -2,9 +2,14 @@
 #include <units/velocity.h>
 #include <units/angular_velocity.h>
 #include <units/time.h>
+#include <frc/geometry/Translation2d.h>
+
 // constants for the robot as a whole
 namespace MainConst {
-    inline constexpr float code_cycle_time = 0.02;
+    inline constexpr double code_cycle_time = 0.02;
+    inline constexpr frc::Translation2d blueReefTranslation{176.75_in, 158.5_in};
+    inline constexpr frc::Translation2d redReefTranslation{514.13_in, 158.5_in};
+    inline constexpr double reefToRobotDistance = 1.308;
 }
 
 namespace DriverControllerConstants {
@@ -25,6 +30,7 @@ namespace SwerveConstants {
     inline constexpr double wheel_diameter_m = 0.10081;
     inline constexpr double motor_turns_per_m = motor_turns_per_wheel_turn / (wheel_diameter_m*M_PI);
     inline constexpr units::velocity::meters_per_second_t max_m_per_sec = 4.5_mps;
+    inline constexpr units::velocity::meters_per_second_t max_limelight_m_per_sec = 0.2_mps;
     inline constexpr units::angular_velocity::radians_per_second_t max_rad_per_sec = 20.88_rad_per_s;
 
     inline constexpr double position_P = 0.04;
