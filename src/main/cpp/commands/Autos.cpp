@@ -3,7 +3,6 @@
 #include <frc2/command/Commands.h>
 
 frc2::CommandPtr autos::ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech, const choreo::Trajectory<choreo::SwerveSample> &trajectory1, const choreo::Trajectory<choreo::SwerveSample> &trajectory2) {
-  auto initialPose = trajectory1.GetInitialPose().value();
   return drive.setInitialTrajectoryCmd(trajectory1)
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(trajectory1),
@@ -14,7 +13,6 @@ frc2::CommandPtr autos::ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech,
 }
 
 frc2::CommandPtr autos::ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech, const choreo::Trajectory<choreo::SwerveSample> &trajectory1, const choreo::Trajectory<choreo::SwerveSample> &trajectory2) {
-  auto initialPose = trajectory1.GetInitialPose().value();
   return drive.setInitialTrajectoryCmd(trajectory1)
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(trajectory1),
@@ -31,7 +29,6 @@ frc2::CommandPtr autos::RightAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
         const choreo::Trajectory<choreo::SwerveSample> &algaeTraj2,
         const choreo::Trajectory<choreo::SwerveSample> &algaeTraj3,
         const choreo::Trajectory<choreo::SwerveSample> &algaeTraj4 ) {
-  auto initialPose = trajectory1.GetInitialPose().value();
   return drive.setInitialTrajectoryCmd(trajectory1)
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(trajectory1),
