@@ -32,6 +32,7 @@ class RobotContainer {
   void ConfigureDefaultCommands();
   void DisplaySchedulerDetails();
   void InitializeOdometry();
+  void InitializeYaw();
   
   ScoringMech m_scoringMech{&m_XKeys};
 

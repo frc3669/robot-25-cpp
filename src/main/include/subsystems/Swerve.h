@@ -8,6 +8,7 @@
 #include <ctre/phoenix6/StatusSignal.hpp>
 #include "subsystems/SwerveModule.h"
 #include <frc/Timer.h>
+#include <frc/DriverStation.h>
 #include <complex.h>
 #include "choreo/Choreo.h"
 #include "Constants.h"
@@ -20,14 +21,13 @@ class Swerve : public frc2::SubsystemBase {
     void Periodic() override;
     void SimulationPeriodic() override;
     frc2::CommandPtr defaultDrive();
-    frc2::CommandPtr followTrajectory(choreo::Trajectory<choreo::SwerveSample> *trajectory);
+    frc2::CommandPtr followTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
     void brake();
     frc2::CommandPtr driveRightToPole();
     frc2::CommandPtr driveLeftToPole();
-    frc2::CommandPtr resetPoseCmd(frc::Pose2d newPose);
-    frc2::CommandPtr resetPositionCmd(frc::Translation2d newTranslation);
-    void RunOdometry();
+    frc2::CommandPtr setInitialTrajectoryCmd(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
     void InitializeOdometry();
+    void InitializeYaw();
     ~Swerve();
     
   private:
@@ -35,7 +35,6 @@ class Swerve : public frc2::SubsystemBase {
     ctre::phoenix6::hardware::Pigeon2 gyro{1, "CTREdevices"};
     ctre::phoenix6::StatusSignal<units::angle::degree_t> * m_gyroAngleSignal;
     std::vector<ctre::phoenix6::BaseStatusSignal*> m_statusSignals;
-    frc::DigitalInput poleSensor{1};
     frc::Timer autoTimer;
     // robot swerve modules
     SwerveModule m_frontLeft = SwerveModule(1), m_backLeft = SwerveModule(2),
@@ -59,19 +58,16 @@ class Swerve : public frc2::SubsystemBase {
     frc::Pose2d m_pose;
     frc::Pose2d m_lastLimelightPose;
     frc::Pose2d m_targetPose;
-    units::degree_t m_gyroAngle;
-    units::degree_t m_gyroOffset;
-    units::angle::radian_t possibleReefAngles[6] = {0_rad, 1_rad*M_PI/3, 2_rad*M_PI/3, 1_rad*M_PI, 4_rad*M_PI/3, 5_rad*M_PI/3};
-    units::angle::radian_t possibleFeederStationAngles[2] = {2.1995556168958954_rad, -2.1995556168958954_rad};
     frc::Translation2d m_pastTranslations[100];
     int m_validPastTranslationCount = 0;
     int m_currentTranslationIndex = 0;
+    choreo::Trajectory<choreo::SwerveSample> m_trajectory;
 
-    void moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajectory);
+    void setInitialTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
+    void setTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
+    void moveToNextSample();
     void driveToTargetPose();
     bool targetPoseReached();
-    units::angle::radian_t getReefAlignmentError();
-    units::angle::radian_t getFeederStationAlignmentError();
     void resetPosition(frc::Translation2d newTranslation);
     void resetRotation(frc::Rotation2d newRotation);
     void resetPose(frc::Pose2d newPose);

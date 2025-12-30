@@ -74,3 +74,7 @@ void RobotContainer::DisplaySchedulerDetails() {
 void RobotContainer::InitializeOdometry() {
   m_drive.InitializeOdometry();
 }
+
+void RobotContainer::InitializeYaw() {
+  m_drive.InitializeYaw();
+}

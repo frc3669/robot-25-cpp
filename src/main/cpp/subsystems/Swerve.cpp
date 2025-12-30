@@ -26,7 +26,11 @@ void Swerve::SimulationPeriodic() {}
 void Swerve::Periodic() {}
 
 void Swerve::driveTeleop() {
-    complex<double> velocity = complex<double>(-m_driverController.GetRawAxis(1), -m_driverController.GetRawAxis(0));
+    int invert = 1;
+    if (frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kRed) {
+        invert = -1;
+    }
+    complex<double> velocity = complex<double>(-m_driverController.GetRawAxis(1) * invert, -m_driverController.GetRawAxis(0) * invert);
     double angularVelocity = -m_driverController.GetRawAxis(4);
     if (m_driverController.GetRawButton(4)) {
         resetRotation(0_deg);
@@ -38,12 +42,6 @@ void Swerve::driveTeleop() {
     if (abs(angularVelocity) > dB) {
         angularVelocity *= (1.0 - dB/abs(angularVelocity))/(1.0 - dB);
     } else { angularVelocity = 0; }
-    // autoalign with A and B buttons
-    if (m_driverController.GetRawButton(1)) {
-        angularVelocity += getReefAlignmentError().value() * autoalign_P;
-    } else if (m_driverController.GetRawButton(2)) {
-        angularVelocity += getFeederStationAlignmentError().value() * autoalign_P;
-    }
     velocity *= SwerveConstants::max_m_per_sec.value();
     angularVelocity *= SwerveConstants::max_rad_per_sec.value();
     m_rawControllerFieldOrientedSpeeds = frc::ChassisSpeeds{units::velocity::meters_per_second_t{velocity.real()},
@@ -64,9 +62,18 @@ frc2::CommandPtr Swerve::defaultDrive() {
     return Run([this] { driveTeleop(); }).WithName("Driving Teleoperated");
 }
 
-void Swerve::moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajectory) {   
-    if (!autoTimer.HasElapsed(trajectory->GetTotalTime())) {
-        choreo::SwerveSample currentSample = trajectory->SampleAt(autoTimer.Get()).value();
+void Swerve::setTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
+    if (frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed) {
+        m_trajectory = trajectory.Flipped();
+    } else {
+        m_trajectory = trajectory;
+    }
+    autoTimer.Restart();
+}
+
+void Swerve::moveToNextSample() {
+    if (!autoTimer.HasElapsed(m_trajectory.GetTotalTime())) {
+        choreo::SwerveSample currentSample = m_trajectory.SampleAt(autoTimer.Get()).value();
         auto positionErrorX = currentSample.x - m_pose.X();
         auto positionErrorY = currentSample.y - m_pose.Y();
         auto headingError = currentSample.heading - m_pose.Rotation().Radians();
@@ -95,11 +102,12 @@ void Swerve::moveToNextSample(choreo::Trajectory<choreo::SwerveSample> *trajecto
 }
 
 void Swerve::driveToTargetPose() {
-    auto error = m_targetPose - m_pose;
+    auto translationError = m_targetPose.Translation() - m_pose.Translation();
+    auto rotationError = m_targetPose.Rotation() - m_pose.Rotation();
     frc::ChassisSpeeds speeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(
-            error.X()*position_P/1_s,
-            error.Y()*position_P/1_s,
-            error.Rotation().Radians()*heading_P/1_s,
+            translationError.X()*position_P/1_s,
+            translationError.Y()*position_P/1_s,
+            rotationError.Radians()*heading_P/1_s,
             m_pose.Rotation());
     auto moduleStates = m_kinematics.ToSwerveModuleStates(speeds);
     m_kinematics.DesaturateWheelSpeeds(&moduleStates, max_limelight_m_per_sec);
@@ -109,15 +117,19 @@ void Swerve::driveToTargetPose() {
 }
 
 bool Swerve::targetPoseReached() {
-    return m_targetPose.Translation().Distance(m_pose.Translation()) < 1_in;
+    return m_targetPose.Translation().Distance(m_pose.Translation()) < 0.5_in;
 }
 
-frc2::CommandPtr Swerve::followTrajectory(choreo::Trajectory<choreo::SwerveSample> *trajectory) {
+frc2::CommandPtr Swerve::setInitialTrajectoryCmd(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
+    return RunOnce([this, trajectory] { setInitialTrajectory(trajectory); }).WithName("Setting initial trajectory"); 
+}
+
+frc2::CommandPtr Swerve::followTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
     return frc2::FunctionalCommand(
-        [this] { this->autoTimer.Restart(); },
-        [this, trajectory] { moveToNextSample(trajectory); },
+        [this, trajectory] { setTrajectory(trajectory); },
+        [this] { moveToNextSample(); },
         [this] (bool x) { brake(); },
-        [this, trajectory] { return autoTimer.HasElapsed(trajectory->GetTotalTime()); },
+        [this, trajectory] { return autoTimer.HasElapsed(trajectory.GetTotalTime()); },
         {this}
     ).ToPtr().WithName("Following Trajectory");
 }
@@ -149,33 +161,11 @@ frc2::CommandPtr Swerve::driveRightToPole() {
 frc2::CommandPtr Swerve::driveLeftToPole() {
     return frc2::FunctionalCommand(
         [this] { setCoralScoringTargetPose(true); },
-        [this] { simpleDrive(frc::ChassisSpeeds{0_mps, 0.5_mps, 0_rad_per_s}); },
+        [this] { driveToTargetPose(); },
         [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
         [this] { return targetPoseReached(); },
         {this}
     ).ToPtr().WithName("Driving to Left Pole");
-}
-
-units::angle::radian_t Swerve::getReefAlignmentError() {
-    for (auto &angle : possibleReefAngles) {
-        auto error = angle - m_pose.Rotation().Radians();
-        am::limit(error);
-        if (units::math::abs(error) <= 1_rad*M_PI/6) {
-            return error;
-        }
-    }
-    return 0_rad;
-}
-
-units::angle::radian_t Swerve::getFeederStationAlignmentError() {
-    auto error1 = possibleFeederStationAngles[0] - m_pose.Rotation().Radians();
-    am::limit(error1);
-    auto error2 = possibleFeederStationAngles[1] - m_pose.Rotation().Radians();
-    am::limit(error2);
-    if (units::math::abs(error1) < units::math::abs(error2)) {
-        return error1;
-    }
-    return error2;
 }
 
 void Swerve::setCoralScoringTargetPose(bool isLeft) {
@@ -187,18 +177,23 @@ void Swerve::setCoralScoringTargetPose(bool isLeft) {
         auto targetTranslation = blueReefTranslation + frc::Translation2d{units::meter_t{reefSideAngle.Cos()}, units::meter_t{reefSideAngle.Sin()}} * reefToRobotDistance;
         auto targetRotation = frc::Rotation2d{reefSideAngle} + frc::Rotation2d{180_deg};
         targetPose = frc::Pose2d{targetTranslation, targetRotation};
+        frc::SmartDashboard::PutString("target status", "targeting blue reef");
     }
     if (translationFromRedReef.Norm() < 2.5_m) {
         auto reefSideAngle = frc::Rotation2d{60_deg * int((translationFromRedReef.Angle().Degrees().value() + 390)/60)};
         auto targetTranslation = redReefTranslation + frc::Translation2d{units::meter_t{reefSideAngle.Cos()}, units::meter_t{reefSideAngle.Sin()}} * reefToRobotDistance;
         auto targetRotation = frc::Rotation2d{reefSideAngle} + frc::Rotation2d{180_deg};
         targetPose = frc::Pose2d{targetTranslation, targetRotation};
+        frc::SmartDashboard::PutString("target status", "targeting red reef");
     }
     if (isLeft) {
-        m_targetPose = targetPose + frc::Transform2d{-6.5_in*targetPose.Rotation().Sin(), 6.5_in*targetPose.Rotation().Cos(), 0_deg};
+        m_targetPose = {targetPose.Translation() + frc::Translation2d{-6.5_in*targetPose.Rotation().Sin(), 6.5_in*targetPose.Rotation().Cos()}, targetPose.Rotation()};
     } else {
-        m_targetPose = targetPose + frc::Transform2d{6.5_in*targetPose.Rotation().Sin(), -6.5_in*targetPose.Rotation().Cos(), 0_deg};
+        m_targetPose = {targetPose.Translation() + frc::Translation2d{6.5_in*targetPose.Rotation().Sin(), -6.5_in*targetPose.Rotation().Cos()}, targetPose.Rotation()};
     }
+    frc::SmartDashboard::PutNumber("target X", m_targetPose.X().value());
+    frc::SmartDashboard::PutNumber("target Y", m_targetPose.Y().value());
+    frc::SmartDashboard::PutNumber("target angle", m_targetPose.Rotation().Degrees().value());
 }
 
 void Swerve::resetPosition(frc::Translation2d newTranslation) {
@@ -206,29 +201,31 @@ void Swerve::resetPosition(frc::Translation2d newTranslation) {
 }
 
 void Swerve::resetRotation(frc::Rotation2d newRotation) {
-    m_gyroOffset = m_gyroAngle - newRotation.Degrees();
+    gyro.SetYaw(newRotation.Degrees());
+    LimelightHelpers::SetRobotOrientation("", newRotation.Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
     m_pose = {m_pose.Translation(), newRotation};
-    
 }
 
 void Swerve::resetPose(frc::Pose2d newPose) {
     resetPosition(newPose.Translation());
     resetRotation(newPose.Rotation());
+    m_pose = newPose;
 }
 
-frc2::CommandPtr Swerve::resetPositionCmd(frc::Translation2d newTranslation) {
-    return RunOnce([this, newTranslation] { resetPosition(newTranslation); }).WithName("Resetting Position to Specified Value");
-}
-
-frc2::CommandPtr Swerve::resetPoseCmd(frc::Pose2d newPose) {
-    return RunOnce([this, newPose] { resetPose(newPose); }).WithName("Resetting Pose to Specified Value");
+// sets the initial robot pose to be equal to the initial sample pose
+void Swerve::setInitialTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
+    if (frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed) {
+        resetPose(trajectory.Flipped().GetInitialPose().value());
+    } else {
+        resetPose(trajectory.GetInitialPose().value());
+    }
 }
 
 void Swerve::OdometryThread() {
     while (true) {
         BaseStatusSignal::WaitForAll(10_ms, m_statusSignals);
-        m_gyroAngle = m_gyroAngleSignal->GetValue();
-        m_pose = {m_pose.Translation(), m_gyroAngle - m_gyroOffset};
+        m_pose = {m_pose.Translation(), m_gyroAngleSignal->GetValue()};
+        LimelightHelpers::SetRobotOrientation("", m_pose.Rotation().Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
         frc::Translation2d deltaTranslationAverage{};
         for (auto & module : m_moduleList) {
             deltaTranslationAverage = deltaTranslationAverage + module->GetDeltaTranslation();
@@ -238,6 +235,7 @@ void Swerve::OdometryThread() {
         m_pose = m_pose + frc::Transform2d{deltaTranslationAverage, 0_deg};
         // Get the pose estimate
         LimelightHelpers::PoseEstimate limelightMeasurement = LimelightHelpers::getBotPoseEstimate_wpiBlue_MegaTag2("");
+        frc::SmartDashboard::PutNumber("limelight angle", limelightMeasurement.pose.Rotation().Degrees().value());
         m_pastTranslations[m_currentTranslationIndex] = m_pose.Translation();
         if (m_validPastTranslationCount < 100) {
             m_validPastTranslationCount++;
@@ -261,6 +259,9 @@ void Swerve::OdometryThread() {
         if (m_currentTranslationIndex > 99) {
             m_currentTranslationIndex = 0;
         }
+        frc::SmartDashboard::PutNumber("X", m_pose.X().value());
+        frc::SmartDashboard::PutNumber("Y", m_pose.Y().value());
+        frc::SmartDashboard::PutNumber("angle", m_pose.Rotation().Degrees().value());
     }
 }
 
@@ -268,11 +269,22 @@ void Swerve::InitializeOdometry() {
     for (auto & module : m_moduleList) {
         module->InitializeOdometry();
     }
-    resetRotation(0_deg);
-    LimelightHelpers::SetRobotOrientation("", m_pose.Rotation().Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
-    LimelightHelpers::SetIMUMode("", 3);
+    LimelightHelpers::SetIMUMode("", 0);
+    // resetRotation(180_deg);
     std::thread odometryThread(&Swerve::OdometryThread, this);
     odometryThread.detach();
+}
+
+// set correct yaw depending on side of field
+void Swerve::InitializeYaw() {
+    auto alliance = frc::DriverStation::GetAlliance();
+    if (alliance.has_value()) {
+        if (alliance.value() == frc::DriverStation::Alliance::kBlue) {
+            resetRotation(180_deg);
+        } else {
+            resetRotation(0_deg);
+        }
+    }
 }
 
 Swerve::~Swerve() {
