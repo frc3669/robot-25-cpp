@@ -35,9 +35,3 @@ void am::limit(units::degree_t &angle) {
         angle += 360_deg;
     }
 }
-
-float am::getProjectionSize(complex<float> a, complex<float> b)  {
-    if (abs(b) != 0)
-        b /= abs(b);
-    return a.real()*b.real() + a.imag()*b.imag();
-}

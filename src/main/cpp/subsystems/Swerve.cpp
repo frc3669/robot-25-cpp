@@ -54,7 +54,7 @@ void Swerve::driveTeleop() {
     m_slewLimiter.Run(fieldRelativeSpeeds, SwerveConstants::time_to_full_speed, 0.02_s);
     states = m_kinematics.ToSwerveModuleStates(frc::ChassisSpeeds::FromFieldRelativeSpeeds(m_slewLimiter.GetSpeeds(), m_pose.Rotation()));
     for (int i = 0; i < 4; i++) {
-        m_moduleList[i]->setDesiredStateTeleop(states[i]);
+        m_moduleList[i]->setDesiredState(states[i]);
     }
 }
 
@@ -83,16 +83,10 @@ void Swerve::moveToNextSample() {
                 positionErrorY*position_P/1_s + currentSample.vy,
                 headingError*heading_P/1_s + currentSample.omega,
                 m_pose.Rotation());
-        // frc::ChassisSpeeds accelerations = frc::ChassisSpeeds::FromFieldRelativeSpeeds(
-        //         currentSample.ax.value()*1_mps_sq,
-        //         currentSample.ay.value()*1_mps_sq,
-        //         currentSample.alpha.value()*1_rad_per_s_sq,
-        //         m_odometry.GetPose().Rotation());
         auto moduleStates = m_kinematics.ToSwerveModuleStates(speeds);
         m_kinematics.DesaturateWheelSpeeds(&moduleStates, max_m_per_sec);
-        // auto moduleAccelerationStates = m_kinematics.ToSwerveModuleStates(accelerations);
         for (int i = 0; i < 4; i++) {
-            m_moduleList[i]->setDesiredStateTeleop(moduleStates[i]);
+            m_moduleList[i]->setDesiredState(moduleStates[i]);
         }
     } else {
         for (auto &module : m_moduleList) {
@@ -112,7 +106,7 @@ void Swerve::driveToTargetPose() {
     auto moduleStates = m_kinematics.ToSwerveModuleStates(speeds);
     m_kinematics.DesaturateWheelSpeeds(&moduleStates, max_limelight_m_per_sec);
     for (int i = 0; i < 4; i++) {
-        m_moduleList[i]->setDesiredStateTeleop(moduleStates[i]);
+        m_moduleList[i]->setDesiredState(moduleStates[i]);
     }
 }
 
@@ -138,7 +132,7 @@ void Swerve::simpleDrive(frc::ChassisSpeeds robotOrientedSpeeds) {
     auto states = m_kinematics.ToSwerveModuleStates(robotOrientedSpeeds);
     m_kinematics.DesaturateWheelSpeeds(&states, max_m_per_sec);
     for (int i = 0; i < 4; i++) {
-        m_moduleList[i]->setDesiredStateTeleop(states[i]);
+        m_moduleList[i]->setDesiredState(states[i]);
     }
 }
 
@@ -148,7 +142,7 @@ void Swerve::brake() {
     }
 }
 
-frc2::CommandPtr Swerve::driveRightToPole() {
+frc2::CommandPtr Swerve::driveToRightPole() {
     return frc2::FunctionalCommand(
         [this] { setCoralScoringTargetPose(false); },
         [this] { driveToTargetPose(); },
@@ -158,7 +152,7 @@ frc2::CommandPtr Swerve::driveRightToPole() {
     ).ToPtr().WithName("Driving to Right Pole");
 }
 
-frc2::CommandPtr Swerve::driveLeftToPole() {
+frc2::CommandPtr Swerve::driveToLeftPole() {
     return frc2::FunctionalCommand(
         [this] { setCoralScoringTargetPose(true); },
         [this] { driveToTargetPose(); },
@@ -194,6 +188,12 @@ void Swerve::setCoralScoringTargetPose(bool isLeft) {
     frc::SmartDashboard::PutNumber("target X", m_targetPose.X().value());
     frc::SmartDashboard::PutNumber("target Y", m_targetPose.Y().value());
     frc::SmartDashboard::PutNumber("target angle", m_targetPose.Rotation().Degrees().value());
+}
+
+bool Swerve::reefWithinRange() {
+    frc::Translation2d translationFromBlueReef = m_pose.Translation() - blueReefTranslation;
+    frc::Translation2d translationFromRedReef = m_pose.Translation() - redReefTranslation;
+    return translationFromBlueReef.Norm() < 2.5_m || translationFromRedReef.Norm() < 2.5_m;
 }
 
 void Swerve::resetPosition(frc::Translation2d newTranslation) {
@@ -270,7 +270,6 @@ void Swerve::InitializeOdometry() {
         module->InitializeOdometry();
     }
     LimelightHelpers::SetIMUMode("", 0);
-    // resetRotation(180_deg);
     std::thread odometryThread(&Swerve::OdometryThread, this);
     odometryThread.detach();
 }

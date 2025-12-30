@@ -32,24 +32,7 @@ SwerveModule::SwerveModule(int moduleID) :
     Util::configureMotor(m_steeringMotor, cfg);
 }
 
-void SwerveModule::setDesiredStateAutonomous(frc::SwerveModuleState & referenceState, frc::SwerveModuleState & referenceAccelerationState) {
-    units::degree_t encoderAngle{m_encoderTurns->GetValue()};
-    auto targetAngle = referenceState.angle.Degrees();
-    auto angleError = targetAngle-encoderAngle;
-    am::limit(angleError);
-    // simultaneously optimize module direction and reduce module speed when pointed in the wrong direction
-    auto moduleSpeed = referenceState.speed*units::math::cos(angleError);
-    if (units::math::abs(angleError) > 90_deg) {
-        angleError += 180_deg;
-        am::limit(angleError);
-    }
-    m_steeringMotor.SetControl(controls::DutyCycleOut(angleError/180_deg));
-    m_driveMotor.SetControl(m_velocity
-        .WithVelocity(moduleSpeed.value()*SwerveConstants::motor_turns_per_m*1_tps));
-    // TODO: add working acceleration feedforward and use this method
-}
-
-void SwerveModule::setDesiredStateTeleop(frc::SwerveModuleState & referenceState) {
+void SwerveModule::setDesiredState(frc::SwerveModuleState & referenceState) {
     
     units::degree_t encoderAngle{m_encoderTurns->GetValue()};
     auto targetAngle = referenceState.angle.Degrees();

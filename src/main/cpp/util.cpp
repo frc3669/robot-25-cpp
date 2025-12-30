@@ -57,8 +57,6 @@ void Util::SlewLimiter::Run(const frc::ChassisSpeeds &targetSpeeds, const units:
     double incrementSize = SwerveConstants::max_m_per_sec.value() * period / secondsToFullSpeed;
     if (distance < incrementSize*2) {
         slewSpeeds = targetSpeeds;
-    // } else if (distance < incrementSize) {
-    //     slewSpeeds = slewSpeeds + (targetSpeeds-slewSpeeds)/2.0;
     } else {
         slewSpeeds = slewSpeeds + (targetSpeeds-slewSpeeds) * (incrementSize/distance);
     }

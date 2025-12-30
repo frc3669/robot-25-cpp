@@ -23,11 +23,12 @@ class Swerve : public frc2::SubsystemBase {
     frc2::CommandPtr defaultDrive();
     frc2::CommandPtr followTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
     void brake();
-    frc2::CommandPtr driveRightToPole();
-    frc2::CommandPtr driveLeftToPole();
+    frc2::CommandPtr driveToRightPole();
+    frc2::CommandPtr driveToLeftPole();
     frc2::CommandPtr setInitialTrajectoryCmd(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
     void InitializeOdometry();
     void InitializeYaw();
+    bool reefWithinRange();
     ~Swerve();
     
   private:

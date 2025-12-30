@@ -17,8 +17,7 @@ class SwerveModule {
     frc::SwerveModulePosition GetPosition();
     frc::Translation2d GetDeltaTranslation();
     void InitializeOdometry();
-    void setDesiredStateTeleop(frc::SwerveModuleState & referenceState);
-    void setDesiredStateAutonomous(frc::SwerveModuleState & referenceState, frc::SwerveModuleState & referenceAccelerationState);
+    void setDesiredState(frc::SwerveModuleState & referenceState);
     ~SwerveModule();
     
     ctre::phoenix6::StatusSignal<units::angle::turn_t> * m_driveMotorTurns;
