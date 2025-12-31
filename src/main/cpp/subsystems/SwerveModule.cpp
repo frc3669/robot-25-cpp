@@ -29,22 +29,35 @@ SwerveModule::SwerveModule(int moduleID) :
     cfg.CurrentLimits.StatorCurrentLimit = 80_A;
     cfg.MotorOutput.NeutralMode = signals::NeutralModeValue::Brake;
     Util::configureMotor(m_driveMotor, cfg);
-    Util::configureMotor(m_steeringMotor, cfg);
+    // apply configs for the steering motor
+    configs::TalonFXConfiguration steeringCfg{};
+    steeringCfg.ClosedLoopGeneral.ContinuousWrap = true;
+    steeringCfg.Feedback.SensorToMechanismRatio = 12.8;
+    steeringCfg.Slot0.kP = 4;
+    steeringCfg.Slot0.kD = 0.1;
+    steeringCfg.Slot0.kS = 0.04;
+    // steeringCfg.Slot0.kV = 0;
+    // steeringCfg.Slot0.kA = 0;
+    steeringCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+    steeringCfg.CurrentLimits.SupplyCurrentLowerLimit = 20_A;
+    steeringCfg.CurrentLimits.SupplyCurrentLowerTime = 0_s;
+    steeringCfg.CurrentLimits.SupplyCurrentLimit = 20_A;
+    steeringCfg.CurrentLimits.StatorCurrentLimit = 80_A;
+    steeringCfg.MotorOutput.NeutralMode = signals::NeutralModeValue::Brake;
+    Util::configureMotor(m_steeringMotor, steeringCfg);
 }
 
 void SwerveModule::setDesiredState(frc::SwerveModuleState & referenceState) {
-    
     units::degree_t encoderAngle{m_encoderTurns->GetValue()};
     auto targetAngle = referenceState.angle.Degrees();
-    auto angleError = targetAngle-encoderAngle;
-    am::limit(angleError);
+    auto angleDifference = targetAngle-encoderAngle;
+    am::limit(angleDifference);
     // simultaneously optimize module direction and reduce module speed when pointed in the wrong direction
-    auto moduleSpeed = referenceState.speed*units::math::cos(angleError);
-    if (units::math::abs(angleError) > 90_deg) {
-        angleError += 180_deg;
-        am::limit(angleError);
+    auto moduleSpeed = referenceState.speed*units::math::cos(angleDifference);
+    if (units::math::abs(angleDifference) > 90_deg) {
+        targetAngle += 180_deg;
     }
-    m_steeringMotor.SetControl(controls::DutyCycleOut(angleError/180_deg));
+    m_steeringMotor.SetControl(m_position.WithPosition(targetAngle));
     m_driveMotor.SetControl(m_velocity
         .WithVelocity(moduleSpeed.value()*SwerveConstants::motor_turns_per_m*1_tps));
 }
@@ -62,6 +75,7 @@ frc::SwerveModulePosition SwerveModule::GetPosition() {
 
 void SwerveModule::InitializeOdometry() {
     lastWheelDistance = units::meter_t{m_driveMotorTurns->GetValueAsDouble() / SwerveConstants::motor_turns_per_m};
+    m_steeringMotor.SetPosition(m_encoderTurns->GetValue());
 }
 
 frc::Translation2d SwerveModule::GetDeltaTranslation() {

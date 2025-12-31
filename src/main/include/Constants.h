@@ -34,7 +34,7 @@ namespace SwerveConstants {
     inline constexpr units::angular_velocity::radians_per_second_t max_rad_per_sec = 20.88_rad_per_s;
     // TODO:: check max_rad_per_sec
 
-    inline constexpr double position_P = 3.0;
+    inline constexpr double position_P = 5.0;
     inline constexpr double heading_P = 13.92;
 }
 

@@ -30,27 +30,27 @@ void Swerve::driveTeleop() {
     if (frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kRed) {
         invert = -1;
     }
-    complex<double> velocity = complex<double>(-m_driverController.GetRawAxis(1) * invert, -m_driverController.GetRawAxis(0) * invert);
+    Eigen::Vector2d velocity(-m_driverController.GetRawAxis(1) * invert, -m_driverController.GetRawAxis(0) * invert);
     double angularVelocity = -m_driverController.GetRawAxis(4);
     if (m_driverController.GetRawButton(4)) {
         resetRotation(0_deg);
     }
     // apply smooth deadband
-    if (abs(velocity) > dB) {
-        velocity *= (1.0F - dB/abs(velocity))/(1.0F - dB);
-    } else { velocity = complex<double>(0, 0); }
+    if (velocity.norm() > dB) {
+        velocity *= (1.0F - dB/velocity.norm())/(1.0F - dB);
+    } else { velocity = Eigen::Vector2d(0, 0); }
     if (abs(angularVelocity) > dB) {
         angularVelocity *= (1.0 - dB/abs(angularVelocity))/(1.0 - dB);
     } else { angularVelocity = 0; }
     velocity *= SwerveConstants::max_m_per_sec.value();
     angularVelocity *= SwerveConstants::max_rad_per_sec.value();
-    m_rawControllerFieldOrientedSpeeds = frc::ChassisSpeeds{units::velocity::meters_per_second_t{velocity.real()},
-                                                            units::velocity::meters_per_second_t{velocity.imag()},
+    frc::ChassisSpeeds rawControllerFieldOrientedSpeeds = frc::ChassisSpeeds{units::velocity::meters_per_second_t{velocity[0]},
+                                                            units::velocity::meters_per_second_t{velocity[1]},
                                                             units::angular_velocity::radians_per_second_t{angularVelocity}};
-    frc::ChassisSpeeds robotOrientedSpeeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(m_rawControllerFieldOrientedSpeeds, m_pose.Rotation());
+    frc::ChassisSpeeds robotOrientedSpeeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(rawControllerFieldOrientedSpeeds, m_pose.Rotation());
     auto states = m_kinematics.ToSwerveModuleStates(robotOrientedSpeeds);
     double desaturationValue = Util::desaturateChassisSpeeds(robotOrientedSpeeds, states);
-    frc::ChassisSpeeds fieldRelativeSpeeds = m_rawControllerFieldOrientedSpeeds * desaturationValue;
+    frc::ChassisSpeeds fieldRelativeSpeeds = rawControllerFieldOrientedSpeeds * desaturationValue;
     m_slewLimiter.Run(fieldRelativeSpeeds, SwerveConstants::time_to_full_speed, 0.02_s);
     states = m_kinematics.ToSwerveModuleStates(frc::ChassisSpeeds::FromFieldRelativeSpeeds(m_slewLimiter.GetSpeeds(), m_pose.Rotation()));
     for (int i = 0; i < 4; i++) {
@@ -171,23 +171,18 @@ void Swerve::setCoralScoringTargetPose(bool isLeft) {
         auto targetTranslation = blueReefTranslation + frc::Translation2d{units::meter_t{reefSideAngle.Cos()}, units::meter_t{reefSideAngle.Sin()}} * reefToRobotDistance;
         auto targetRotation = frc::Rotation2d{reefSideAngle} + frc::Rotation2d{180_deg};
         targetPose = frc::Pose2d{targetTranslation, targetRotation};
-        frc::SmartDashboard::PutString("target status", "targeting blue reef");
     }
     if (translationFromRedReef.Norm() < 2.5_m) {
         auto reefSideAngle = frc::Rotation2d{60_deg * int((translationFromRedReef.Angle().Degrees().value() + 390)/60)};
         auto targetTranslation = redReefTranslation + frc::Translation2d{units::meter_t{reefSideAngle.Cos()}, units::meter_t{reefSideAngle.Sin()}} * reefToRobotDistance;
         auto targetRotation = frc::Rotation2d{reefSideAngle} + frc::Rotation2d{180_deg};
         targetPose = frc::Pose2d{targetTranslation, targetRotation};
-        frc::SmartDashboard::PutString("target status", "targeting red reef");
     }
     if (isLeft) {
         m_targetPose = {targetPose.Translation() + frc::Translation2d{-6.5_in*targetPose.Rotation().Sin(), 6.5_in*targetPose.Rotation().Cos()}, targetPose.Rotation()};
     } else {
         m_targetPose = {targetPose.Translation() + frc::Translation2d{6.5_in*targetPose.Rotation().Sin(), -6.5_in*targetPose.Rotation().Cos()}, targetPose.Rotation()};
     }
-    frc::SmartDashboard::PutNumber("target X", m_targetPose.X().value());
-    frc::SmartDashboard::PutNumber("target Y", m_targetPose.Y().value());
-    frc::SmartDashboard::PutNumber("target angle", m_targetPose.Rotation().Degrees().value());
 }
 
 bool Swerve::reefWithinRange() {
@@ -235,7 +230,6 @@ void Swerve::OdometryThread() {
         m_pose = m_pose + frc::Transform2d{deltaTranslationAverage, 0_deg};
         // Get the pose estimate
         LimelightHelpers::PoseEstimate limelightMeasurement = LimelightHelpers::getBotPoseEstimate_wpiBlue_MegaTag2("");
-        frc::SmartDashboard::PutNumber("limelight angle", limelightMeasurement.pose.Rotation().Degrees().value());
         m_pastTranslations[m_currentTranslationIndex] = m_pose.Translation();
         if (m_validPastTranslationCount < 100) {
             m_validPastTranslationCount++;
@@ -259,9 +253,6 @@ void Swerve::OdometryThread() {
         if (m_currentTranslationIndex > 99) {
             m_currentTranslationIndex = 0;
         }
-        frc::SmartDashboard::PutNumber("X", m_pose.X().value());
-        frc::SmartDashboard::PutNumber("Y", m_pose.Y().value());
-        frc::SmartDashboard::PutNumber("angle", m_pose.Rotation().Degrees().value());
     }
 }
 

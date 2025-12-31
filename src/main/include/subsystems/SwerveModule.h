@@ -29,6 +29,6 @@ class SwerveModule {
     ctre::phoenix6::hardware::TalonFX m_steeringMotor;
     ctre::phoenix6::hardware::CANcoder m_encoder;
 	  ctre::phoenix6::controls::VelocityTorqueCurrentFOC m_velocity{0_tps};
-	  ctre::phoenix6::controls::TorqueCurrentFOC m_torque{0_A};
+	  ctre::phoenix6::controls::PositionDutyCycle m_position{0_tr};
     units::meter_t lastWheelDistance = 0_m;
 };

@@ -50,12 +50,7 @@ class Swerve : public frc2::SubsystemBase {
       m_frontLeftLocation, m_backLeftLocation,
       m_backRightLocation, m_frontRightLocation
     };
-    frc::ChassisSpeeds m_rawControllerFieldOrientedSpeeds;
     Util::SlewLimiter m_slewLimiter;
-    complex<units::velocity::meters_per_second_t> slewVelocity = complex<units::velocity::meters_per_second_t> (0_mps, 0_mps);
-    units::angular_velocity::radians_per_second_t slewAngularVelocity = 0_rad_per_s;
-    units::velocity::meters_per_second_t m_xVelocity, m_yVelocity;
-    units::angular_velocity::radians_per_second_t m_angularRate;
     frc::Pose2d m_pose;
     frc::Pose2d m_lastLimelightPose;
     frc::Pose2d m_targetPose;
