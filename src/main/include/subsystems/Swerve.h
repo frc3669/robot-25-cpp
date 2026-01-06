@@ -23,12 +23,13 @@ class Swerve : public frc2::SubsystemBase {
     frc2::CommandPtr defaultDrive();
     frc2::CommandPtr followTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
     void brake();
-    frc2::CommandPtr driveToRightPole();
-    frc2::CommandPtr driveToLeftPole();
+    frc2::CommandPtr driveToPole(const bool & isLeft);
+    frc2::CommandPtr driveToPoleIntermediate(const bool & isLeft);
     frc2::CommandPtr setInitialTrajectoryCmd(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
     void InitializeOdometry();
     void InitializeYaw();
     bool reefWithinRange();
+    bool safeToMoveCoralManipulator();
     ~Swerve();
     
   private:
@@ -37,6 +38,7 @@ class Swerve : public frc2::SubsystemBase {
     ctre::phoenix6::StatusSignal<units::angle::degree_t> * m_gyroAngleSignal;
     std::vector<ctre::phoenix6::BaseStatusSignal*> m_statusSignals;
     frc::Timer autoTimer;
+    frc::Timer positionReachedTimer;
     // robot swerve modules
     SwerveModule m_frontLeft = SwerveModule(1), m_backLeft = SwerveModule(2),
         m_backRight = SwerveModule(3), m_frontRight = SwerveModule(4);
@@ -64,11 +66,14 @@ class Swerve : public frc2::SubsystemBase {
     void moveToNextSample();
     void driveToTargetPose();
     bool targetPoseReached();
+    bool targetPoseReachedFor(units::second_t settleTime);
     void resetPosition(frc::Translation2d newTranslation);
     void resetRotation(frc::Rotation2d newRotation);
     void resetPose(frc::Pose2d newPose);
     void driveTeleop();
     void simpleDrive(frc::ChassisSpeeds robotOrientedSpeeds);
-    void setCoralScoringTargetPose(bool isLeft);
+    frc::Pose2d getCoralScoringTargetPose(bool isLeft);
+    frc::Pose2d getIntermediateCoralScoringPose(bool isLeft);
+    frc2::CommandPtr driveToPose(const frc::Pose2d & targetPose, const units::second_t & settleTime);
     void OdometryThread();
 };

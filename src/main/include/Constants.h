@@ -10,6 +10,8 @@ namespace MainConst {
     inline constexpr frc::Translation2d blueReefTranslation{176.75_in, 158.5_in};
     inline constexpr frc::Translation2d redReefTranslation{514.13_in, 158.5_in};
     inline constexpr double reefToRobotDistance = 1.298;
+    inline constexpr double scoringOffsetMeters = 0.14;
+    inline constexpr double safeReefDistanceMeters = reefToRobotDistance + scoringOffsetMeters;
 }
 
 namespace DriverControllerConstants {
@@ -29,6 +31,7 @@ namespace SwerveConstants {
     inline constexpr double motor_turns_per_wheel_turn = 5.9;
     inline constexpr double wheel_diameter_m = 0.10081;
     inline constexpr double motor_turns_per_m = motor_turns_per_wheel_turn / (wheel_diameter_m*M_PI);
+    inline constexpr double motor_turns_per_steering_turn = 12.8;
     inline constexpr units::velocity::meters_per_second_t max_m_per_sec = 4.5_mps;
     inline constexpr units::velocity::meters_per_second_t max_limelight_m_per_sec = 1_mps;
     inline constexpr units::angular_velocity::radians_per_second_t max_rad_per_sec = 20.88_rad_per_s;

@@ -4,7 +4,6 @@
 #include "util.h"
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/kinematics/SwerveDriveKinematics.h>
-#include <frc/filter/SlewRateLimiter.h>
 #include <string>
 
 using namespace ctre::phoenix6;
@@ -32,8 +31,8 @@ SwerveModule::SwerveModule(int moduleID) :
     // apply configs for the steering motor
     configs::TalonFXConfiguration steeringCfg{};
     steeringCfg.ClosedLoopGeneral.ContinuousWrap = true;
-    steeringCfg.Feedback.SensorToMechanismRatio = 12.8;
-    steeringCfg.Slot0.kP = 4;
+    steeringCfg.Feedback.SensorToMechanismRatio = SwerveConstants::motor_turns_per_steering_turn;
+    steeringCfg.Slot0.kP = 7;
     steeringCfg.Slot0.kD = 0.1;
     steeringCfg.Slot0.kS = 0.04;
     // steeringCfg.Slot0.kV = 0;
@@ -41,8 +40,8 @@ SwerveModule::SwerveModule(int moduleID) :
     steeringCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
     steeringCfg.CurrentLimits.SupplyCurrentLowerLimit = 20_A;
     steeringCfg.CurrentLimits.SupplyCurrentLowerTime = 0_s;
-    steeringCfg.CurrentLimits.SupplyCurrentLimit = 20_A;
-    steeringCfg.CurrentLimits.StatorCurrentLimit = 80_A;
+    steeringCfg.CurrentLimits.SupplyCurrentLimit = 10_A;
+    steeringCfg.CurrentLimits.StatorCurrentLimit = 40_A;
     steeringCfg.MotorOutput.NeutralMode = signals::NeutralModeValue::Brake;
     Util::configureMotor(m_steeringMotor, steeringCfg);
 }

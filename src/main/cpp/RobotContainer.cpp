@@ -7,7 +7,7 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc2/command/button/Trigger.h>
-#include "commands/Score.h"
+#include "commands/MultiSubsystem.h"
 #include "commands/Autos.h"
 
 RobotContainer::RobotContainer() {
@@ -20,13 +20,13 @@ RobotContainer::RobotContainer() {
 
 void RobotContainer::ConfigureBindings() {
   // scoring mechanism button bindings
-  m_XKeys.Button(9).OnTrue(m_scoringMech.intake());
-  m_XKeys.Button(17).OnTrue(m_scoringMech.home());
-  m_XKeys.Button(6).OnTrue(m_scoringMech.home());
+  m_XKeys.Button(9).OnTrue(GeneralCmds::IntakeSafely(m_drive, m_scoringMech));
+  m_XKeys.Button(17).OnTrue(GeneralCmds::HomeSafely(m_drive, m_scoringMech));
+  m_XKeys.Button(6).OnTrue(GeneralCmds::HomeSafely(m_drive, m_scoringMech));
   m_XKeys.Button(16).OnTrue(m_scoringMech.coralReset());
-  m_XKeys.Button(15).OnTrue(m_scoringMech.goL2());
-  m_XKeys.Button(14).OnTrue(m_scoringMech.goL3());
-  m_XKeys.Button(13).OnTrue(m_scoringMech.goL4());
+  m_XKeys.Button(15).OnTrue(m_scoringMech.setCoralScoringLevel(2));
+  m_XKeys.Button(14).OnTrue(m_scoringMech.setCoralScoringLevel(3));
+  m_XKeys.Button(13).OnTrue(m_scoringMech.setCoralScoringLevel(4));
   m_XKeys.Button(10).OnTrue(m_scoringMech.ejectCoral());
   m_XKeys.Button(5).OnTrue(m_scoringMech.intakeAlgae());
   m_XKeys.Button(3).OnTrue(m_scoringMech.intakeL3_5());
@@ -39,8 +39,8 @@ void RobotContainer::ConfigureBindings() {
   m_XKeys.Button(18).WhileTrue(m_climber.extend());
   m_XKeys.Button(19).WhileTrue(m_climber.retract());
   // autoscore button bindings
-  m_XKeys.Button(12).OnTrue(Score::Right(m_drive, m_scoringMech));
-  m_XKeys.Button(11).OnTrue(Score::Left(m_drive, m_scoringMech));
+  m_XKeys.Button(12).OnTrue(Score::ScoreCoral(m_drive, m_scoringMech, false));
+  m_XKeys.Button(11).OnTrue(Score::ScoreCoral(m_drive, m_scoringMech, true));
   m_cmdDriverController.Button(3).OnTrue(m_scoringMech.intakeCoralAlgae());
 }
 

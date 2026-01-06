@@ -23,7 +23,14 @@ Swerve::Swerve(int driverControllerPortNum) :
 
 void Swerve::SimulationPeriodic() {}
 
-void Swerve::Periodic() {}
+void Swerve::Periodic() {
+    frc::SmartDashboard::PutNumber("pose X", m_pose.X().value());
+    frc::SmartDashboard::PutNumber("pose Y", m_pose.Y().value());
+    frc::SmartDashboard::PutNumber("pose A", m_pose.Rotation().Degrees().value());
+    frc::SmartDashboard::PutNumber("target pose X", m_targetPose.X().value());
+    frc::SmartDashboard::PutNumber("target pose Y", m_targetPose.Y().value());
+    frc::SmartDashboard::PutNumber("target pose A", m_targetPose.Rotation().Degrees().value());
+}
 
 void Swerve::driveTeleop() {
     int invert = 1;
@@ -114,6 +121,13 @@ bool Swerve::targetPoseReached() {
     return m_targetPose.Translation().Distance(m_pose.Translation()) < 0.5_in;
 }
 
+bool Swerve::targetPoseReachedFor(units::second_t settleTime) {
+    if (!targetPoseReached()) {
+        positionReachedTimer.Restart();
+    }
+    return positionReachedTimer.HasElapsed(settleTime);
+}
+
 frc2::CommandPtr Swerve::setInitialTrajectoryCmd(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
     return RunOnce([this, trajectory] { setInitialTrajectory(trajectory); }).WithName("Setting initial trajectory"); 
 }
@@ -142,27 +156,27 @@ void Swerve::brake() {
     }
 }
 
-frc2::CommandPtr Swerve::driveToRightPole() {
+frc2::CommandPtr Swerve::driveToPole(const bool & isLeft) {
     return frc2::FunctionalCommand(
-        [this] { setCoralScoringTargetPose(false); },
+        [this, isLeft] { m_targetPose = getCoralScoringTargetPose(isLeft); },
+        [this] { driveToTargetPose(); },
+        [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
+        [this] { return targetPoseReachedFor(0.5_s); },
+        {this}
+    ).ToPtr().WithName("driving to given reef pole");
+}
+
+frc2::CommandPtr Swerve::driveToPoleIntermediate(const bool & isLeft) {
+    return frc2::FunctionalCommand(
+        [this, isLeft] { m_targetPose = getIntermediateCoralScoringPose(isLeft); },
         [this] { driveToTargetPose(); },
         [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
         [this] { return targetPoseReached(); },
         {this}
-    ).ToPtr().WithName("Driving to Right Pole");
+    ).ToPtr().WithName("driving to intermediate coral scoring pose");
 }
 
-frc2::CommandPtr Swerve::driveToLeftPole() {
-    return frc2::FunctionalCommand(
-        [this] { setCoralScoringTargetPose(true); },
-        [this] { driveToTargetPose(); },
-        [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
-        [this] { return targetPoseReached(); },
-        {this}
-    ).ToPtr().WithName("Driving to Left Pole");
-}
-
-void Swerve::setCoralScoringTargetPose(bool isLeft) {
+frc::Pose2d Swerve::getCoralScoringTargetPose(bool isLeft) {
     frc::Translation2d translationFromBlueReef = m_pose.Translation() - blueReefTranslation;
     frc::Translation2d translationFromRedReef = m_pose.Translation() - redReefTranslation;
     frc::Pose2d targetPose;
@@ -179,16 +193,31 @@ void Swerve::setCoralScoringTargetPose(bool isLeft) {
         targetPose = frc::Pose2d{targetTranslation, targetRotation};
     }
     if (isLeft) {
-        m_targetPose = {targetPose.Translation() + frc::Translation2d{-6.5_in*targetPose.Rotation().Sin(), 6.5_in*targetPose.Rotation().Cos()}, targetPose.Rotation()};
+        return {targetPose.Translation() + frc::Translation2d{-6.5_in*targetPose.Rotation().Sin(), 6.5_in*targetPose.Rotation().Cos()}, targetPose.Rotation()};
     } else {
-        m_targetPose = {targetPose.Translation() + frc::Translation2d{6.5_in*targetPose.Rotation().Sin(), -6.5_in*targetPose.Rotation().Cos()}, targetPose.Rotation()};
+        return {targetPose.Translation() + frc::Translation2d{6.5_in*targetPose.Rotation().Sin(), -6.5_in*targetPose.Rotation().Cos()}, targetPose.Rotation()};
     }
+}
+
+frc::Pose2d Swerve::getIntermediateCoralScoringPose(bool isLeft) {
+    auto targetPose = getCoralScoringTargetPose(isLeft);
+    return {targetPose.Translation()
+        + frc::Translation2d{units::meter_t{-targetPose.Rotation().Cos()},
+                             units::meter_t{-targetPose.Rotation().Sin()}} * scoringOffsetMeters,
+                             targetPose.Rotation()};
 }
 
 bool Swerve::reefWithinRange() {
     frc::Translation2d translationFromBlueReef = m_pose.Translation() - blueReefTranslation;
     frc::Translation2d translationFromRedReef = m_pose.Translation() - redReefTranslation;
     return translationFromBlueReef.Norm() < 2.5_m || translationFromRedReef.Norm() < 2.5_m;
+}
+
+bool Swerve::safeToMoveCoralManipulator() {
+    frc::Translation2d translationFromBlueReef = m_pose.Translation() - blueReefTranslation;
+    frc::Translation2d translationFromRedReef = m_pose.Translation() - redReefTranslation;
+    return (translationFromBlueReef.Norm() > units::meter_t{safeReefDistanceMeters})
+        && (translationFromRedReef.Norm() > units::meter_t{safeReefDistanceMeters});
 }
 
 void Swerve::resetPosition(frc::Translation2d newTranslation) {
@@ -271,8 +300,10 @@ void Swerve::InitializeYaw() {
     if (alliance.has_value()) {
         if (alliance.value() == frc::DriverStation::Alliance::kBlue) {
             resetRotation(180_deg);
+            cout << "initialized yaw for blue side\n";
         } else {
             resetRotation(0_deg);
+            cout << "initialized yaw for red side\n";
         }
     }
 }

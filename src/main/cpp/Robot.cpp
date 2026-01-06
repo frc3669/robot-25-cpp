@@ -14,6 +14,7 @@ Robot::Robot() {
 
 void Robot::RobotInit() {
   m_container.InitializeOdometry();
+  m_container.InitializeYaw();
 }
 
 /**

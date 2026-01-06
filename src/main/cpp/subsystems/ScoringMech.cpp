@@ -141,7 +141,6 @@ frc2::CommandPtr ScoringMech::intakeL3_5() {
 frc2::CommandPtr ScoringMech::home() {
   return frc2::cmd::Sequence(
     RunOnce([this] { stopEverything(); }),
-    setHeightAndAnglesCmd(0,15,0),
     setHeightAndAnglesCmd(0,0,0),
     RunOnce([this] { elevatorMotor.SetControl(controls::NeutralOut()); })
   ).WithName("Homing");
@@ -159,12 +158,19 @@ frc2::CommandPtr ScoringMech::goL2() {
   return setHeightAndAnglesCmd(5, 3.65, 0).WithName("Going to Level 2");
 }
 
-frc2::CommandPtr ScoringMech::goL1() {
-  return frc2::cmd::Sequence(
-    RunOnce([this] { setIntakeSpeed(-0.18); }),
-    frc2::cmd::Wait(1_s),
-    RunOnce([this] { brakeIntake(); })
-  ).WithName("Shooting for Level 1");
+frc2::CommandPtr ScoringMech::goToCoralScoringPosition() {
+  return frc2::cmd::Select<int, frc2::CommandPtr>(
+    [this] { return m_coralScoringLevel; },
+    std::pair<int,frc2::CommandPtr>{1, home()},
+    std::pair<int,frc2::CommandPtr>{2, goL2()},
+    std::pair<int,frc2::CommandPtr>{3, goL3()},
+    std::pair<int,frc2::CommandPtr>{4, goL4()}
+    ).WithName("going to selected coral scoring position");
+}
+
+frc2::CommandPtr ScoringMech::setCoralScoringLevel(const int & level) {
+  return RunOnce([this, level] { if (1 <= level <= 4) m_coralScoringLevel = level; })
+    .WithName("setting given coral scoring level");
 }
 
 frc2::CommandPtr ScoringMech::ejectCoral() {
@@ -201,8 +207,6 @@ frc2::CommandPtr ScoringMech::prepareForClimb() {
 
 frc2::CommandPtr ScoringMech::setHeightAndAnglesCmd(float height, float coralAngle, float algaeAngle) {
   return frc2::cmd::Sequence(
-    frc2::InstantCommand([this] { setCoralAngle(15); }, {this}).ToPtr(),
-    frc2::cmd::WaitUntil([this] { return getCoralAngleReached(15); }),
     frc2::InstantCommand([this, height, coralAngle, algaeAngle] { setHeightAndAngles(height, coralAngle, algaeAngle); }, {this}).ToPtr(),
     frc2::cmd::WaitUntil([this, height, coralAngle, algaeAngle] { return (getHeightReached(height) && getCoralAngleReached(coralAngle) && getAlgaeAngleReached(algaeAngle)); })
   ).WithName("Setting Height and Angles");

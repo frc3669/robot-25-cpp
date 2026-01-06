@@ -1,5 +1,5 @@
 #include "commands/Autos.h"
-#include "commands/Score.h"
+#include "commands/MultiSubsystem.h"
 #include <frc2/command/Commands.h>
 
 frc2::CommandPtr autos::ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech, const choreo::Trajectory<choreo::SwerveSample> &trajectory1, const choreo::Trajectory<choreo::SwerveSample> &trajectory2) {
@@ -7,7 +7,7 @@ frc2::CommandPtr autos::ScoreL4LeftPole(Swerve &drive, ScoringMech &scoringMech,
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(trajectory1),
       scoringMech.goL4()))
-    .AndThen(Score::Left(drive, scoringMech))
+    .AndThen(Score::ScoreCoralForAuto(drive, scoringMech, true))
     .AndThen(drive.followTrajectory(trajectory2))
     .AndThen(scoringMech.home());
 }
@@ -17,7 +17,7 @@ frc2::CommandPtr autos::ScoreL4RightPole(Swerve &drive, ScoringMech &scoringMech
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(trajectory1),
       scoringMech.goL4()))
-    .AndThen(Score::Right(drive, scoringMech))
+    .AndThen(Score::ScoreCoralForAuto(drive, scoringMech, false))
     .AndThen(drive.followTrajectory(trajectory2))
     .AndThen(scoringMech.home());
 }
@@ -33,7 +33,7 @@ frc2::CommandPtr autos::RightAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(trajectory1),
       scoringMech.goL4()))
-    .AndThen(Score::Right(drive, scoringMech))
+    .AndThen(Score::ScoreCoralForAuto(drive, scoringMech, false))
     .AndThen(drive.followTrajectory(trajectory2))
     .AndThen(frc2::cmd::Parallel(
              frc2::cmd::Sequence(drive.followTrajectory(algaeTraj1),
@@ -57,7 +57,7 @@ frc2::CommandPtr autos::CenterAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(trajectory1),
       scoringMech.goL4()))
-    .AndThen(Score::Right(drive, scoringMech))
+    .AndThen(Score::ScoreCoralForAuto(drive, scoringMech, false))
     .AndThen(drive.followTrajectory(trajectory2))
     .AndThen(frc2::cmd::Parallel(
              frc2::cmd::Sequence(drive.followTrajectory(algaeTraj1),
@@ -80,7 +80,7 @@ frc2::CommandPtr autos::LeftAlgaeAuto(Swerve &drive, ScoringMech &scoringMech,
     .AndThen(frc2::cmd::Parallel(
       drive.followTrajectory(trajectory1),
       scoringMech.goL4()))
-    .AndThen(Score::Left(drive, scoringMech))
+    .AndThen(Score::ScoreCoralForAuto(drive, scoringMech, true))
     .AndThen(drive.followTrajectory(trajectory2))
     .AndThen(frc2::cmd::Parallel(
              frc2::cmd::Sequence(drive.followTrajectory(algaeTraj1),

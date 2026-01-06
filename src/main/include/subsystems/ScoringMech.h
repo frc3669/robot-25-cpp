@@ -10,6 +10,7 @@
 #include <frc2/command/button/CommandGenericHID.h>
 #include <ctre/phoenix6/TalonFX.hpp>
 #include <ctre/phoenix6/TalonFXS.hpp>
+#include <map>
 
 class ScoringMech : public frc2::SubsystemBase {
  public:
@@ -32,6 +33,8 @@ class ScoringMech : public frc2::SubsystemBase {
   frc2::CommandPtr goL3();
   frc2::CommandPtr goL2();
   frc2::CommandPtr goL1();
+  frc2::CommandPtr setCoralScoringLevel(const int & level);
+  frc2::CommandPtr goToCoralScoringPosition();
   frc2::CommandPtr ejectCoral();
   frc2::CommandPtr goBarge();
   frc2::CommandPtr goProcessor();
@@ -79,7 +82,5 @@ class ScoringMech : public frc2::SubsystemBase {
   ctre::phoenix6::hardware::TalonFX algaeAngleMotor{52, "rio"};
   ctre::phoenix6::controls::MotionMagicTorqueCurrentFOC positionCtrl{0_tr};
   frc2::CommandGenericHID *xkeys;
-
-  // Components (e.g. motor controllers and sensors) should generally be
-  // declared private and exposed only through public methods.
+  int m_coralScoringLevel = 1;
 };
