@@ -14,7 +14,6 @@ Robot::Robot() {
 
 void Robot::RobotInit() {
   m_container.InitializeOdometry();
-  m_container.InitializeYaw();
 }
 
 /**
@@ -45,7 +44,6 @@ void Robot::DisabledPeriodic() {}
  * RobotContainer} class.
  */
 void Robot::AutonomousInit() {
-  m_container.InitializeYaw();
   m_autonomousCommand = m_container.GetAutonomousCommand();
 
   if (m_autonomousCommand != nullptr) {

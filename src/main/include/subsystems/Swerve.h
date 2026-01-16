@@ -8,9 +8,8 @@
 #include <ctre/phoenix6/StatusSignal.hpp>
 #include "subsystems/SwerveModule.h"
 #include <frc/Timer.h>
-#include <frc/DriverStation.h>
-#include <complex.h>
-#include "choreo/Choreo.h"
+#include <frc/smartdashboard/Field2d.h>
+#include <pathplanner/lib/config/RobotConfig.h>
 #include "Constants.h"
 #include "util.h"
 #include <LimelightHelpers.h>
@@ -21,13 +20,10 @@ class Swerve : public frc2::SubsystemBase {
     void Periodic() override;
     void SimulationPeriodic() override;
     frc2::CommandPtr defaultDrive();
-    frc2::CommandPtr followTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
     void brake();
     frc2::CommandPtr driveToPole(const bool & isLeft);
     frc2::CommandPtr driveToPoleIntermediate(const bool & isLeft);
-    frc2::CommandPtr setInitialTrajectoryCmd(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
     void InitializeOdometry();
-    void InitializeYaw();
     bool reefWithinRange();
     bool safeToMoveCoralManipulator();
     ~Swerve();
@@ -70,22 +66,35 @@ class Swerve : public frc2::SubsystemBase {
     int m_validPastTranslationCount = 0;
     // index of the most recent odometry translation stored in the buffer
     int m_currentTranslationIndex = 0;
-    // the trajectory we are following if we are currently following a trajectory
-    choreo::Trajectory<choreo::SwerveSample> m_trajectory;
+    // field for displaying on SmartDashboard
+    frc::Field2d field;
+    // pathplanner robot config
+    std::optional<pathplanner::RobotConfig> robotConfig;
 
-    void setInitialTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
-    void setTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory);
-    void moveToNextSample();
+    // drive to the currently set target pose
     void driveToTargetPose();
+    // returs true if the currently set target pose has been reached
     bool targetPoseReached();
+    // returns true when the target pose has been withing range for the given settling time
     bool targetPoseReachedFor(units::second_t settleTime);
-    void resetPosition(frc::Translation2d newTranslation);
+    // sets the robot's current rotation to the new rotation specified
     void resetRotation(frc::Rotation2d newRotation);
+    // sets the robot's current pose to the new pose specified
     void resetPose(frc::Pose2d newPose);
+    // drives the swerve using the joystick
     void driveTeleop();
-    void simpleDrive(frc::ChassisSpeeds robotOrientedSpeeds);
+    // drives the robot with the given chassis speeds
+    void driveRobotRelative(const frc::ChassisSpeeds & robotRelativeSpeeds);
+    // get the current robot relative chassis speeds
+    frc::ChassisSpeeds getSpeeds();
+    // get the current pose of the robot
+    frc::Pose2d getPose();
+    // get coral scoring target pose for the given pole side
     frc::Pose2d getCoralScoringTargetPose(bool isLeft);
+    // get intermediate scoring pose at a safe distance from the target to prevent the elevator from colliding
     frc::Pose2d getIntermediateCoralScoringPose(bool isLeft);
+    // command the swerve chassis drive to a pose on the field
     frc2::CommandPtr driveToPose(const frc::Pose2d & targetPose, const units::second_t & settleTime);
+    // thread that runs in the background to calculate the robot field location
     void OdometryThread();
 };

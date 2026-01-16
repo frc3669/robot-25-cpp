@@ -169,7 +169,7 @@ frc2::CommandPtr ScoringMech::goToCoralScoringPosition() {
 }
 
 frc2::CommandPtr ScoringMech::setCoralScoringLevel(const int & level) {
-  return RunOnce([this, level] { if (1 <= level <= 4) m_coralScoringLevel = level; })
+  return RunOnce([this, level] { if (1 <= level && level <= 4) m_coralScoringLevel = level; })
     .WithName("setting given coral scoring level");
 }
 

@@ -8,14 +8,19 @@
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc2/command/button/Trigger.h>
 #include "commands/MultiSubsystem.h"
-#include "commands/Autos.h"
+#include <pathplanner/lib/auto/AutoBuilder.h>
+#include <pathplanner/lib/path/PathPlannerPath.h>
+#include <pathplanner/lib/commands/PathPlannerAuto.h>
+#include <pathplanner/lib/auto/NamedCommands.h>
+#include <pathplanner/lib/events/EventTrigger.h>
+
+using namespace pathplanner;
 
 RobotContainer::RobotContainer() {
-
-
   // Configure the button bindings
   ConfigureBindings();
   ConfigureChooser();
+  RegisterNamedCommands();
 }
 
 void RobotContainer::ConfigureBindings() {
@@ -44,13 +49,19 @@ void RobotContainer::ConfigureBindings() {
   m_cmdDriverController.Button(3).OnTrue(m_scoringMech.intakeCoralAlgae());
 }
 
+void RobotContainer::RegisterNamedCommands() {
+  NamedCommands::registerCommand("go L4", m_scoringMech.goL4());
+  NamedCommands::registerCommand("score right pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, false));
+  NamedCommands::registerCommand("score left pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, true));
+}
+
 void RobotContainer::ConfigureChooser() {
-  m_chooser.SetDefaultOption("Center Auto", m_centerAuto.get());
-  m_chooser.AddOption("Left Auto", m_leftAuto.get());
-  m_chooser.AddOption("Right Auto", m_rightAuto.get());
-  m_chooser.AddOption("Right Algae Auto", m_rightAlgaeAuto.get());
-  m_chooser.AddOption("Center Algae Auto", m_centerAlgaeAuto.get());
-  m_chooser.AddOption("Left Algae Auto", m_leftAlgaeAuto.get());
+  m_centerAuto = PathPlannerAuto("Score Coral").ToPtr();
+  if (m_centerAuto) {
+    m_chooser.SetDefaultOption("Center Auto", m_centerAuto.value().get());
+  } else {
+    clog << "failed to get Center Auto\n"; 
+  }
   frc::SmartDashboard::PutData(&m_chooser);
 }
 
@@ -73,8 +84,4 @@ void RobotContainer::DisplaySchedulerDetails() {
 
 void RobotContainer::InitializeOdometry() {
   m_drive.InitializeOdometry();
-}
-
-void RobotContainer::InitializeYaw() {
-  m_drive.InitializeYaw();
 }

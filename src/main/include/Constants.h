@@ -2,7 +2,9 @@
 #include <units/velocity.h>
 #include <units/angular_velocity.h>
 #include <units/time.h>
+#include <units/current.h>
 #include <frc/geometry/Translation2d.h>
+#include <pathplanner/lib/config/PIDConstants.h>
 
 // constants for the robot as a whole
 namespace MainConst {
@@ -20,18 +22,12 @@ namespace DriverControllerConstants {
 
 // constants for the swerve
 namespace SwerveConstants {
-    inline constexpr double max_current = 100;
-    inline constexpr double feedforward_current = 4;
-    inline constexpr double current_headroom = 4;
-    inline constexpr double max_accel = 8;
-    inline constexpr double braking_accel = 4;
-    inline constexpr double max_m_per_sec_per_cycle = max_accel * MainConst::code_cycle_time;
     inline constexpr units::time::second_t time_to_full_speed = 0.5625_s;
-    inline constexpr double current_to_accel_ratio = 9;
+    inline constexpr units::current::ampere_t max_torque_current = 100_A;
     inline constexpr double motor_turns_per_wheel_turn = 5.9;
+    inline constexpr double motor_turns_per_steering_turn = 12.8;
     inline constexpr double wheel_diameter_m = 0.10081;
     inline constexpr double motor_turns_per_m = motor_turns_per_wheel_turn / (wheel_diameter_m*M_PI);
-    inline constexpr double motor_turns_per_steering_turn = 12.8;
     inline constexpr units::velocity::meters_per_second_t max_m_per_sec = 4.5_mps;
     inline constexpr units::velocity::meters_per_second_t max_limelight_m_per_sec = 1_mps;
     inline constexpr units::angular_velocity::radians_per_second_t max_rad_per_sec = 20.88_rad_per_s;
@@ -39,6 +35,8 @@ namespace SwerveConstants {
 
     inline constexpr double position_P = 5.0;
     inline constexpr double heading_P = 13.92;
+    inline constexpr pathplanner::PIDConstants translationConstants(5.0, 0.0, 0.0);
+    inline constexpr pathplanner::PIDConstants rotationConstants(5.0, 0.0, 0.0);
 }
 
 namespace ScoreMechConst {

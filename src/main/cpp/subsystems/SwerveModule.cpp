@@ -15,12 +15,13 @@ SwerveModule::SwerveModule(int moduleID) :
         m_steeringMotor(20 + moduleID, "CTREdevices"),
         m_encoder(30 + moduleID, "CTREdevices") {
     m_driveMotorTurns = new StatusSignal(m_driveMotor.GetPosition());
+    m_driveMotorVelocity = new StatusSignal(m_driveMotor.GetVelocity());
     m_encoderTurns = new StatusSignal(m_encoder.GetAbsolutePosition());
     configs::TalonFXConfiguration cfg{};
     cfg.Slot0.kP = 5;
     cfg.Slot0.kS = 3;
-    cfg.TorqueCurrent.PeakForwardTorqueCurrent = SwerveConstants::max_current * 1_A;
-    cfg.TorqueCurrent.PeakReverseTorqueCurrent = -SwerveConstants::max_current * 1_A;
+    cfg.TorqueCurrent.PeakForwardTorqueCurrent = SwerveConstants::max_torque_current;
+    cfg.TorqueCurrent.PeakReverseTorqueCurrent = -SwerveConstants::max_torque_current;
     cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
     cfg.CurrentLimits.SupplyCurrentLowerLimit = 20_A;
     cfg.CurrentLimits.SupplyCurrentLowerTime = 0_s;
@@ -72,6 +73,11 @@ frc::SwerveModulePosition SwerveModule::GetPosition() {
             units::radian_t{m_encoderTurns->GetValueAsDouble()}};
 }
 
+frc::SwerveModuleState SwerveModule::GetState() {
+    return {units::meters_per_second_t{m_driveMotorVelocity->GetValueAsDouble()/SwerveConstants::motor_turns_per_m},
+            units::radian_t{m_encoderTurns->GetValueAsDouble()}};
+}
+
 void SwerveModule::InitializeOdometry() {
     lastWheelDistance = units::meter_t{m_driveMotorTurns->GetValueAsDouble() / SwerveConstants::motor_turns_per_m};
     m_steeringMotor.SetPosition(m_encoderTurns->GetValue());
@@ -87,5 +93,6 @@ frc::Translation2d SwerveModule::GetDeltaTranslation() {
 
 SwerveModule::~SwerveModule() {
     delete m_driveMotorTurns;
+    delete m_driveMotorVelocity;
     delete m_encoderTurns;
 }

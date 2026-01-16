@@ -5,7 +5,6 @@
 #pragma once
 #include <frc/GenericHID.h>
 #include <frc/smartdashboard/SendableChooser.h>
-#include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/kinematics/SwerveDriveKinematics.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandJoystick.h>
@@ -14,7 +13,6 @@
 #include "subsystems/ScoringMech.h"
 #include "subsystems/Swerve.h"
 #include "subsystems/Climb.h"
-#include "commands/Autos.h"
 
 /**
  * This class is where the bulk of the robot should be declared.  Since
@@ -32,7 +30,6 @@ class RobotContainer {
   void ConfigureDefaultCommands();
   void DisplaySchedulerDetails();
   void InitializeOdometry();
-  void InitializeYaw();
   
   ScoringMech m_scoringMech{&m_XKeys};
 
@@ -45,52 +42,11 @@ class RobotContainer {
   Swerve m_drive{0};
   Climb m_climber{};
 
-
-  // autonomous trajectories
-  choreo::Trajectory<choreo::SwerveSample> centerTraj1 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Path 1").value();
-  choreo::Trajectory<choreo::SwerveSample> centerTraj2 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Path 2").value();
-  choreo::Trajectory<choreo::SwerveSample> leftTraj1 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Path 1").value();
-  choreo::Trajectory<choreo::SwerveSample> leftTraj2 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Path 2").value();
-  choreo::Trajectory<choreo::SwerveSample> rightTraj1 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Path 1").value();
-  choreo::Trajectory<choreo::SwerveSample> rightTraj2 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Path 2").value();
-  choreo::Trajectory<choreo::SwerveSample> rightAlgae1 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 1").value();
-  choreo::Trajectory<choreo::SwerveSample> rightAlgae2 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 2").value();
-  choreo::Trajectory<choreo::SwerveSample> rightAlgae3 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 3").value();
-  choreo::Trajectory<choreo::SwerveSample> rightAlgae4 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Right Algae 4").value();
-  choreo::Trajectory<choreo::SwerveSample> centerAlgae1 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Algae 1").value();
-  choreo::Trajectory<choreo::SwerveSample> centerAlgae2 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Algae 2").value();
-  choreo::Trajectory<choreo::SwerveSample> centerAlgae3 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Algae 3").value();
-  choreo::Trajectory<choreo::SwerveSample> centerAlgae4 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Center Algae 4").value();
-  choreo::Trajectory<choreo::SwerveSample> leftAlgae1 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Algae 1").value();
-  choreo::Trajectory<choreo::SwerveSample> leftAlgae2 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Algae 2").value();
-  choreo::Trajectory<choreo::SwerveSample> leftAlgae3 =
-    choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("Left Algae 3").value();
-
   // autonomous routines
-  frc2::CommandPtr m_centerAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, centerTraj1, centerTraj2);
-  frc2::CommandPtr m_leftAuto = autos::ScoreL4LeftPole(m_drive, m_scoringMech, leftTraj1, leftTraj2);
-  frc2::CommandPtr m_rightAuto = autos::ScoreL4RightPole(m_drive, m_scoringMech, rightTraj1, rightTraj2);
-  frc2::CommandPtr m_rightAlgaeAuto = autos::RightAlgaeAuto(m_drive, m_scoringMech, rightTraj1, rightTraj2, rightAlgae1, rightAlgae2, rightAlgae3, rightAlgae4);
-  frc2::CommandPtr m_centerAlgaeAuto = autos::CenterAlgaeAuto(m_drive, m_scoringMech, centerTraj1, centerTraj2, centerAlgae1, centerAlgae2, centerAlgae3, centerAlgae4);
-  frc2::CommandPtr m_leftAlgaeAuto = autos::LeftAlgaeAuto(m_drive, m_scoringMech, leftTraj1, leftTraj2, leftAlgae1, leftAlgae2, leftAlgae3);
+  std::optional<frc2::CommandPtr> m_centerAuto;
 
   frc::SendableChooser<frc2::Command*> m_chooser;
 
   void ConfigureBindings();
+  void RegisterNamedCommands();
 };

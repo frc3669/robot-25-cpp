@@ -15,12 +15,14 @@ class SwerveModule {
     void brake();
     void resetEncoders();
     frc::SwerveModulePosition GetPosition();
+    frc::SwerveModuleState GetState();
     frc::Translation2d GetDeltaTranslation();
     void InitializeOdometry();
     void setDesiredState(frc::SwerveModuleState & referenceState);
     ~SwerveModule();
     
     ctre::phoenix6::StatusSignal<units::angle::turn_t> * m_driveMotorTurns;
+    ctre::phoenix6::StatusSignal<units::angular_velocity::turns_per_second_t> * m_driveMotorVelocity;
     ctre::phoenix6::StatusSignal<units::angle::turn_t> * m_encoderTurns;
 
   private:

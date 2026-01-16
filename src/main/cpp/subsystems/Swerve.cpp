@@ -1,13 +1,17 @@
 #include "subsystems/Swerve.h"
 #include <frc2/command/Commands.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <pathplanner/lib/auto/AutoBuilder.h>
+#include <pathplanner/lib/util/PathPlannerLogging.h>
+#include <pathplanner/lib/controllers/PPHolonomicDriveController.h>
+#include <frc/DriverStation.h>
 #include <thread>
 
 using namespace SwerveConstants;
 using namespace MainConst;
 using namespace DriverControllerConstants;
 using namespace ctre::phoenix6;
-
+using namespace pathplanner;
 
 Swerve::Swerve(int driverControllerPortNum) : 
         m_driverController(driverControllerPortNum) {
@@ -16,9 +20,33 @@ Swerve::Swerve(int driverControllerPortNum) :
     m_statusSignals.push_back(m_gyroAngleSignal);
     for (auto & module : m_moduleList) {
         m_statusSignals.push_back(module->m_driveMotorTurns);
+        m_statusSignals.push_back(module->m_driveMotorVelocity);
         m_statusSignals.push_back(module->m_encoderTurns);
     }
+    // set all the swerve status signals to update really fast
     BaseStatusSignal::SetUpdateFrequencyForAll(200_Hz, m_statusSignals);
+    // configure AutoBuilder
+    AutoBuilder::configure(
+        [this]() {return getPose();},
+        [this](const frc::Pose2d& pose) {resetPose(pose);},
+        [this]() {return getSpeeds();},
+        [this](const frc::ChassisSpeeds& robotRelativeSpeeds) {driveRobotRelative(robotRelativeSpeeds);},
+        std::make_shared<PPHolonomicDriveController>(
+            SwerveConstants::translationConstants,
+            SwerveConstants::rotationConstants
+        ),
+        robotConfig.value(),
+        []() {
+            // boolean supplier that controls when the path will be flipped for the red alliance
+            auto alliance = frc::DriverStation::GetAlliance();
+            if (alliance) {
+                return alliance.value() == frc::DriverStation::Alliance::kRed;
+            }
+            return false;
+        },
+        this
+    );
+
 }
 
 void Swerve::SimulationPeriodic() {}
@@ -33,7 +61,6 @@ void Swerve::Periodic() {
     frc::SmartDashboard::PutNumber("target pose A", m_targetPose.Rotation().Degrees().value());
 }
 
-// drives the swerve using velocity control with a slew rate for motion smoothing
 void Swerve::driveTeleop() {
     // invert the controls or not depending on which side of the field 
     int invert = 1;
@@ -80,43 +107,8 @@ void Swerve::driveTeleop() {
     }
 }
 
-// the default command to run when no other command is running
 frc2::CommandPtr Swerve::defaultDrive() {
     return Run([this] { driveTeleop(); }).WithName("Driving Teleoperated");
-}
-
-// 
-void Swerve::setTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
-    if (frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed) {
-        m_trajectory = trajectory.Flipped();
-    } else {
-        m_trajectory = trajectory;
-    }
-    autoTimer.Restart();
-}
-
-void Swerve::moveToNextSample() {
-    if (!autoTimer.HasElapsed(m_trajectory.GetTotalTime())) {
-        choreo::SwerveSample currentSample = m_trajectory.SampleAt(autoTimer.Get()).value();
-        auto positionErrorX = currentSample.x - m_pose.X();
-        auto positionErrorY = currentSample.y - m_pose.Y();
-        auto headingError = currentSample.heading - m_pose.Rotation().Radians();
-        am::limit(headingError);
-        frc::ChassisSpeeds speeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(
-                positionErrorX*position_P/1_s + currentSample.vx,
-                positionErrorY*position_P/1_s + currentSample.vy,
-                headingError*heading_P/1_s + currentSample.omega,
-                m_pose.Rotation());
-        auto moduleStates = m_kinematics.ToSwerveModuleStates(speeds);
-        m_kinematics.DesaturateWheelSpeeds(&moduleStates, max_m_per_sec);
-        for (int i = 0; i < 4; i++) {
-            m_moduleList[i]->setDesiredState(moduleStates[i]);
-        }
-    } else {
-        for (auto &module : m_moduleList) {
-            module->brake();
-        }
-    }
 }
 
 void Swerve::driveToTargetPose() {
@@ -145,22 +137,8 @@ bool Swerve::targetPoseReachedFor(units::second_t settleTime) {
     return positionReachedTimer.HasElapsed(settleTime);
 }
 
-frc2::CommandPtr Swerve::setInitialTrajectoryCmd(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
-    return RunOnce([this, trajectory] { setInitialTrajectory(trajectory); }).WithName("Setting initial trajectory"); 
-}
-
-frc2::CommandPtr Swerve::followTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
-    return frc2::FunctionalCommand(
-        [this, trajectory] { setTrajectory(trajectory); },
-        [this] { moveToNextSample(); },
-        [this] (bool x) { brake(); },
-        [this, trajectory] { return autoTimer.HasElapsed(trajectory.GetTotalTime()); },
-        {this}
-    ).ToPtr().WithName("Following Trajectory");
-}
-
-void Swerve::simpleDrive(frc::ChassisSpeeds robotOrientedSpeeds) {
-    auto states = m_kinematics.ToSwerveModuleStates(robotOrientedSpeeds);
+void Swerve::driveRobotRelative(const frc::ChassisSpeeds & robotRelativeSpeeds) {
+    auto states = m_kinematics.ToSwerveModuleStates(robotRelativeSpeeds);
     m_kinematics.DesaturateWheelSpeeds(&states, max_m_per_sec);
     for (int i = 0; i < 4; i++) {
         m_moduleList[i]->setDesiredState(states[i]);
@@ -177,17 +155,26 @@ frc2::CommandPtr Swerve::driveToPole(const bool & isLeft) {
     return frc2::FunctionalCommand(
         [this, isLeft] { m_targetPose = getCoralScoringTargetPose(isLeft); },
         [this] { driveToTargetPose(); },
-        [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
+        [this] (bool x) { driveRobotRelative(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
         [this] { return targetPoseReachedFor(0.5_s); },
         {this}
     ).ToPtr().WithName("driving to given reef pole");
+}
+
+frc::Pose2d Swerve::getPose() {
+    return m_pose;
+}
+
+frc::ChassisSpeeds Swerve::getSpeeds() {
+    return m_kinematics.ToChassisSpeeds(m_moduleList[0]->GetState(), m_moduleList[1]->GetState(),
+                                        m_moduleList[2]->GetState(), m_moduleList[3]->GetState());
 }
 
 frc2::CommandPtr Swerve::driveToPoleIntermediate(const bool & isLeft) {
     return frc2::FunctionalCommand(
         [this, isLeft] { m_targetPose = getIntermediateCoralScoringPose(isLeft); },
         [this] { driveToTargetPose(); },
-        [this] (bool x) { simpleDrive(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
+        [this] (bool x) { driveRobotRelative(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
         [this] { return targetPoseReached(); },
         {this}
     ).ToPtr().WithName("driving to intermediate coral scoring pose");
@@ -237,10 +224,6 @@ bool Swerve::safeToMoveCoralManipulator() {
         && (translationFromRedReef.Norm() > units::meter_t{safeReefDistanceMeters});
 }
 
-void Swerve::resetPosition(frc::Translation2d newTranslation) {
-    m_pose = {newTranslation, m_pose.Rotation()};
-}
-
 void Swerve::resetRotation(frc::Rotation2d newRotation) {
     gyro.SetYaw(newRotation.Degrees());
     LimelightHelpers::SetRobotOrientation("", newRotation.Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
@@ -248,18 +231,9 @@ void Swerve::resetRotation(frc::Rotation2d newRotation) {
 }
 
 void Swerve::resetPose(frc::Pose2d newPose) {
-    resetPosition(newPose.Translation());
-    resetRotation(newPose.Rotation());
+    gyro.SetYaw(newPose.Rotation().Degrees());
+    LimelightHelpers::SetRobotOrientation("", newPose.Rotation().Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
     m_pose = newPose;
-}
-
-// sets the initial robot pose to be equal to the initial sample pose
-void Swerve::setInitialTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
-    if (frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed) {
-        resetPose(trajectory.Flipped().GetInitialPose().value());
-    } else {
-        resetPose(trajectory.GetInitialPose().value());
-    }
 }
 
 void Swerve::OdometryThread() {
@@ -309,20 +283,6 @@ void Swerve::InitializeOdometry() {
     LimelightHelpers::SetIMUMode("", 0);
     std::thread odometryThread(&Swerve::OdometryThread, this);
     odometryThread.detach();
-}
-
-// set correct yaw depending on side of field
-void Swerve::InitializeYaw() {
-    auto alliance = frc::DriverStation::GetAlliance();
-    if (alliance.has_value()) {
-        if (alliance.value() == frc::DriverStation::Alliance::kBlue) {
-            resetRotation(180_deg);
-            cout << "initialized yaw for blue side\n";
-        } else {
-            resetRotation(0_deg);
-            cout << "initialized yaw for red side\n";
-        }
-    }
 }
 
 Swerve::~Swerve() {
