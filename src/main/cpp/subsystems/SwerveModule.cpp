@@ -1,4 +1,5 @@
 #include "subsystems/SwerveModule.h"
+#include <ctre/phoenix6/CANBus.hpp>
 #include "Constants.h"
 #include "angleMath.h"
 #include "util.h"
@@ -11,9 +12,9 @@ using namespace std;
 
 // create a Swerve module object with specified position and ID
 SwerveModule::SwerveModule(int moduleID) : 
-        m_moduleID(moduleID), m_driveMotor(10 + moduleID, "CTREdevices"),
-        m_steeringMotor(20 + moduleID, "CTREdevices"),
-        m_encoder(30 + moduleID, "CTREdevices") {
+        m_moduleID(moduleID), m_driveMotor(10 + moduleID, CANBus("CTREdevices")),
+        m_steeringMotor(20 + moduleID, CANBus("CTREdevices")),
+        m_encoder(30 + moduleID, CANBus("CTREdevices")) {
     m_driveMotorTurns = new StatusSignal(m_driveMotor.GetPosition());
     m_driveMotorVelocity = new StatusSignal(m_driveMotor.GetVelocity());
     m_encoderTurns = new StatusSignal(m_encoder.GetAbsolutePosition());
@@ -36,8 +37,6 @@ SwerveModule::SwerveModule(int moduleID) :
     steeringCfg.Slot0.kP = 7;
     steeringCfg.Slot0.kD = 0.1;
     steeringCfg.Slot0.kS = 0.04;
-    // steeringCfg.Slot0.kV = 0;
-    // steeringCfg.Slot0.kA = 0;
     steeringCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
     steeringCfg.CurrentLimits.SupplyCurrentLowerLimit = 20_A;
     steeringCfg.CurrentLimits.SupplyCurrentLowerTime = 0_s;

@@ -18,5 +18,5 @@ public:
     void SimulationPeriodic() override;
 
 private:
-    ctre::phoenix6::hardware::TalonFX mClimb{43, "rio"};
+    ctre::phoenix6::hardware::TalonFX mClimb{43, ctre::phoenix6::CANBus("rio")};
 };

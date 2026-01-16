@@ -75,11 +75,11 @@ class ScoringMech : public frc2::SubsystemBase {
 
   frc::DigitalInput intakeSensor{0};
   frc::DigitalInput algaeIntakeSensor{2};
-  ctre::phoenix6::hardware::TalonFX elevatorMotor{41, "rio"};
-  ctre::phoenix6::hardware::TalonFXS scoringMotor{61, "rio"};
-  ctre::phoenix6::hardware::TalonFXS algaeScoringMotor{62, "rio"};
-  ctre::phoenix6::hardware::TalonFX coralAngleMotor{51, "rio"};
-  ctre::phoenix6::hardware::TalonFX algaeAngleMotor{52, "rio"};
+  ctre::phoenix6::hardware::TalonFX elevatorMotor{41, ctre::phoenix6::CANBus("rio")};
+  ctre::phoenix6::hardware::TalonFXS scoringMotor{61, ctre::phoenix6::CANBus("rio")};
+  ctre::phoenix6::hardware::TalonFXS algaeScoringMotor{62, ctre::phoenix6::CANBus("rio")};
+  ctre::phoenix6::hardware::TalonFX coralAngleMotor{51, ctre::phoenix6::CANBus("rio")};
+  ctre::phoenix6::hardware::TalonFX algaeAngleMotor{52, ctre::phoenix6::CANBus("rio")};
   ctre::phoenix6::controls::MotionMagicTorqueCurrentFOC positionCtrl{0_tr};
   frc2::CommandGenericHID *xkeys;
   int m_coralScoringLevel = 1;

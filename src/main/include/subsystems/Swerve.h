@@ -6,6 +6,7 @@
 #include <frc/kinematics/SwerveDriveKinematics.h>
 #include <ctre/phoenix6/Pigeon2.hpp>
 #include <ctre/phoenix6/StatusSignal.hpp>
+#include <ctre/phoenix6/CANBus.hpp>
 #include "subsystems/SwerveModule.h"
 #include <frc/Timer.h>
 #include <frc/smartdashboard/Field2d.h>
@@ -30,7 +31,7 @@ class Swerve : public frc2::SubsystemBase {
     
   private:
     frc::GenericHID m_driverController;
-    ctre::phoenix6::hardware::Pigeon2 gyro{1, "CTREdevices"};
+    ctre::phoenix6::hardware::Pigeon2 gyro{1, ctre::phoenix6::CANBus("CTREdevices")};
     ctre::phoenix6::StatusSignal<units::angle::degree_t> * m_gyroAngleSignal;
     std::vector<ctre::phoenix6::BaseStatusSignal*> m_statusSignals;
     frc::Timer autoTimer;
