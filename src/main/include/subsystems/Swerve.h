@@ -42,23 +42,35 @@ class Swerve : public frc2::SubsystemBase {
     // robot swerve modules
     SwerveModule m_frontLeft = SwerveModule(1), m_backLeft = SwerveModule(2),
         m_backRight = SwerveModule(3), m_frontRight = SwerveModule(4);
+    // array of module pointers
     SwerveModule * m_moduleList[4] = {&m_frontLeft, &m_backLeft,
                                     &m_backRight, &m_frontRight};
     frc::Translation2d m_frontLeftLocation{12_in, 12_in};
     frc::Translation2d m_backLeftLocation{-12_in, 12_in};
     frc::Translation2d m_backRightLocation{-12_in, -12_in};
     frc::Translation2d m_frontRightLocation{12_in, -12_in};
+    /**
+     * swerve kinematics object for calculating the module states
+     * given the positions of the modules and the chassis speeds */
     frc::SwerveDriveKinematics<4> m_kinematics {
       m_frontLeftLocation, m_backLeftLocation,
       m_backRightLocation, m_frontRightLocation
     };
+    // slew limiter object that limits the rate at which we approach the target chassis speeds
     Util::SlewLimiter m_slewLimiter;
+    // current robot pose
     frc::Pose2d m_pose;
+    // last known limelight pose
     frc::Pose2d m_lastLimelightPose;
+    // target pose for autonomous positioning during teleop
     frc::Pose2d m_targetPose;
+    // rotating buffer to store past odometry positions
     frc::Translation2d m_pastTranslations[100];
+    // the number of translations stored in the buffer that are relavent
     int m_validPastTranslationCount = 0;
+    // index of the most recent odometry translation stored in the buffer
     int m_currentTranslationIndex = 0;
+    // the trajectory we are following if we are currently following a trajectory
     choreo::Trajectory<choreo::SwerveSample> m_trajectory;
 
     void setInitialTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory);

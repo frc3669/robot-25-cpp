@@ -14,19 +14,5 @@
     "**/.factorypath": true,
     "**/*~": true
   },
-  "C_Cpp.default.configurationProvider": "vscode-wpilib",
-  "files.associations": {
-    "*.rmd": "markdown",
-    "complex": "cpp",
-    "utility": "cpp",
-    "*.tcc": "cpp",
-    "expected": "cpp",
-    "optional": "cpp",
-    "system_error": "cpp",
-    "regex": "cpp",
-    "compare": "cpp",
-    "memory": "cpp",
-    "functional": "cpp",
-    "type_traits": "cpp"
-  }
+  "C_Cpp.default.configurationProvider": "vscode-wpilib"
 }

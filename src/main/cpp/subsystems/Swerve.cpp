@@ -24,6 +24,7 @@ Swerve::Swerve(int driverControllerPortNum) :
 void Swerve::SimulationPeriodic() {}
 
 void Swerve::Periodic() {
+    // print some useful data to the dashboard
     frc::SmartDashboard::PutNumber("pose X", m_pose.X().value());
     frc::SmartDashboard::PutNumber("pose Y", m_pose.Y().value());
     frc::SmartDashboard::PutNumber("pose A", m_pose.Rotation().Degrees().value());
@@ -32,43 +33,59 @@ void Swerve::Periodic() {
     frc::SmartDashboard::PutNumber("target pose A", m_targetPose.Rotation().Degrees().value());
 }
 
+// drives the swerve using velocity control with a slew rate for motion smoothing
 void Swerve::driveTeleop() {
+    // invert the controls or not depending on which side of the field 
     int invert = 1;
     if (frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kRed) {
         invert = -1;
     }
-    Eigen::Vector2d velocity(-m_driverController.GetRawAxis(1) * invert, -m_driverController.GetRawAxis(0) * invert);
-    double angularVelocity = -m_driverController.GetRawAxis(4);
     if (m_driverController.GetRawButton(4)) {
         resetRotation(0_deg);
     }
-    // apply smooth deadband
+    Eigen::Vector2d velocity(-m_driverController.GetRawAxis(1) * invert, -m_driverController.GetRawAxis(0) * invert);
+    double angularVelocity = -m_driverController.GetRawAxis(4);
+    /**
+     * apply deadbands in such a way that it is still
+     * possible to drive the robot at arbitrarily slow speeds
+     **/
     if (velocity.norm() > dB) {
         velocity *= (1.0F - dB/velocity.norm())/(1.0F - dB);
     } else { velocity = Eigen::Vector2d(0, 0); }
     if (abs(angularVelocity) > dB) {
         angularVelocity *= (1.0 - dB/abs(angularVelocity))/(1.0 - dB);
     } else { angularVelocity = 0; }
+    // scale the target velocity so it reaches the max
     velocity *= SwerveConstants::max_m_per_sec.value();
     angularVelocity *= SwerveConstants::max_rad_per_sec.value();
+    // set the field oriented chassis speeds target
     frc::ChassisSpeeds rawControllerFieldOrientedSpeeds = frc::ChassisSpeeds{units::velocity::meters_per_second_t{velocity[0]},
                                                             units::velocity::meters_per_second_t{velocity[1]},
                                                             units::angular_velocity::radians_per_second_t{angularVelocity}};
+    // get the robot oriented version of the chassis speeds target
     frc::ChassisSpeeds robotOrientedSpeeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(rawControllerFieldOrientedSpeeds, m_pose.Rotation());
+    // get the module states (the states contain module speed and wheel angle values for driving the modules)
     auto states = m_kinematics.ToSwerveModuleStates(robotOrientedSpeeds);
+    // rescale the robotOriented target speeds to ensure that no module exceeds its max velocity
     double desaturationValue = Util::desaturateChassisSpeeds(robotOrientedSpeeds, states);
+    // rescale the fieldOriented target speeds by the same amount we rescaled the robot oriented speeds so we can run it throught the slew limiting algorithm
     frc::ChassisSpeeds fieldRelativeSpeeds = rawControllerFieldOrientedSpeeds * desaturationValue;
+    // run the slew limiter on the field relative speeds
     m_slewLimiter.Run(fieldRelativeSpeeds, SwerveConstants::time_to_full_speed, 0.02_s);
+    // calculate the final swerve module states 
     states = m_kinematics.ToSwerveModuleStates(frc::ChassisSpeeds::FromFieldRelativeSpeeds(m_slewLimiter.GetSpeeds(), m_pose.Rotation()));
+    // drive all the swerve modules
     for (int i = 0; i < 4; i++) {
         m_moduleList[i]->setDesiredState(states[i]);
     }
 }
 
+// the default command to run when no other command is running
 frc2::CommandPtr Swerve::defaultDrive() {
     return Run([this] { driveTeleop(); }).WithName("Driving Teleoperated");
 }
 
+// 
 void Swerve::setTrajectory(const choreo::Trajectory<choreo::SwerveSample> & trajectory) {
     if (frc::DriverStation::GetAlliance().value() == frc::DriverStation::Alliance::kRed) {
         m_trajectory = trajectory.Flipped();
