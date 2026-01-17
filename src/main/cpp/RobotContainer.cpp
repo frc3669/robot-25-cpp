@@ -50,9 +50,9 @@ void RobotContainer::ConfigureBindings() {
 }
 
 void RobotContainer::RegisterNamedCommands() {
-  NamedCommands::registerCommand("go L4", m_scoringMech.goL4());
-  NamedCommands::registerCommand("score right pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, false));
-  NamedCommands::registerCommand("score left pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, true));
+  // NamedCommands::registerCommand("go L4", m_scoringMech.goL4());
+  // NamedCommands::registerCommand("score right pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, false));
+  // NamedCommands::registerCommand("score left pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, true));
 }
 
 // void RobotContainer::ConfigureChooser() {

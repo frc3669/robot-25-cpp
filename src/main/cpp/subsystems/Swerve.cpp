@@ -46,7 +46,6 @@ Swerve::Swerve(int driverControllerPortNum) :
         },
         this
     );
-
 }
 
 void Swerve::SimulationPeriodic() {}
