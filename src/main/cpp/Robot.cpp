@@ -61,9 +61,9 @@ void Robot::TeleopInit() {
   // continue until interrupted by another command, remove
   // this line or comment it out.
   // frc::DataLogManager::Start();
-  if (m_autonomousCommand != nullptr) {
-    m_autonomousCommand->Cancel();
-  }
+  // if (m_autonomousCommand != nullptr) {
+  //   m_autonomousCommand->Cancel();
+  // }
 }
 
 /**

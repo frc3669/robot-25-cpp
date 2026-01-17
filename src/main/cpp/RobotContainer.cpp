@@ -70,10 +70,10 @@ void RobotContainer::ConfigureDefaultCommands() {
   m_climber.SetDefaultCommand(std::move(m_climber.brake()));
 }
 
-frc2::Command* RobotContainer::GetAutonomousCommand() {
-  // An example command will be run in autonomous
-  return m_chooser.GetSelected();
-}
+// frc2::Command* RobotContainer::GetAutonomousCommand() {
+//   // An example command will be run in autonomous
+//   return m_chooser.GetSelected();
+// }
 
 void RobotContainer::DisplaySchedulerDetails() {
   frc::SmartDashboard::PutData("Command Scheduler Status", &frc2::CommandScheduler::GetInstance());
