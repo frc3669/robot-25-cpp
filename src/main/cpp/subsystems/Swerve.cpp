@@ -154,8 +154,7 @@ void Swerve::brake() {
 frc2::CommandPtr Swerve::driveToPole(const bool & isLeft) {
     return frc2::FunctionalCommand(
         [this, isLeft] { m_targetPose = getCoralScoringTargetPose(isLeft); },
-        [this] { driveToTargetPose();
-                 cout << "driving to pole\n"; },
+        [this] { driveToTargetPose(); },
         [this] (bool x) { driveRobotRelative(frc::ChassisSpeeds{0_mps, 0_mps, 0_rad_per_s}); },
         [this] { return targetPoseReachedFor(0.5_s); },
         {this}
