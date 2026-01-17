@@ -50,30 +50,30 @@ void RobotContainer::ConfigureBindings() {
 }
 
 void RobotContainer::RegisterNamedCommands() {
-  // NamedCommands::registerCommand("go L4", m_scoringMech.goL4());
-  // NamedCommands::registerCommand("score right pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, false));
-  // NamedCommands::registerCommand("score left pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, true));
+  NamedCommands::registerCommand("go L4", m_scoringMech.goL4());
+  NamedCommands::registerCommand("score right pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, false));
+  NamedCommands::registerCommand("score left pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, true));
 }
 
-// void RobotContainer::ConfigureChooser() {
-//   m_centerAuto = PathPlannerAuto("Score Coral").ToPtr();
-//   if (m_centerAuto.has_value()) {
-//     m_chooser.SetDefaultOption("Center Auto", m_centerAuto.value().get());
-//   } else {
-//     clog << "failed to get Center Auto\n";
-//   }
-//   frc::SmartDashboard::PutData(&m_chooser);
-// }
+void RobotContainer::ConfigureChooser() {
+  m_centerAuto = PathPlannerAuto("Score Coral").ToPtr();
+  if (m_centerAuto.has_value()) {
+    m_chooser.SetDefaultOption("Center Auto", m_centerAuto.value().get());
+  } else {
+    clog << "failed to get Center Auto\n";
+  }
+  frc::SmartDashboard::PutData(&m_chooser);
+}
 
 void RobotContainer::ConfigureDefaultCommands() {
   m_drive.SetDefaultCommand(std::move(m_drive.defaultDrive()));
   m_climber.SetDefaultCommand(std::move(m_climber.brake()));
 }
 
-// frc2::Command* RobotContainer::GetAutonomousCommand() {
-//   // An example command will be run in autonomous
-//   return m_chooser.GetSelected();
-// }
+frc2::Command* RobotContainer::GetAutonomousCommand() {
+  // An example command will be run in autonomous
+  return m_chooser.GetSelected();
+}
 
 void RobotContainer::DisplaySchedulerDetails() {
   frc::SmartDashboard::PutData("Command Scheduler Status", &frc2::CommandScheduler::GetInstance());

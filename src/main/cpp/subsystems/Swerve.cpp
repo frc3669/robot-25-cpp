@@ -26,6 +26,7 @@ Swerve::Swerve(int driverControllerPortNum) :
     // set all the swerve status signals to update really fast
     BaseStatusSignal::SetUpdateFrequencyForAll(200_Hz, m_statusSignals);
     // configure AutoBuilder
+    robotConfig = RobotConfig::fromGUISettings();
     AutoBuilder::configure(
         [this]() {return getPose();},
         [this](const frc::Pose2d& pose) {resetPose(pose);},

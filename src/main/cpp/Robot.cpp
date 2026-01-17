@@ -44,13 +44,13 @@ void Robot::DisabledPeriodic() {}
  * RobotContainer} class.
  */
 void Robot::AutonomousInit() {
-  // m_autonomousCommand = m_container.GetAutonomousCommand();
+  m_autonomousCommand = m_container.GetAutonomousCommand();
 
-  // if (m_autonomousCommand != nullptr) {
-  //   frc2::CommandScheduler::GetInstance().Schedule(m_autonomousCommand);
-  // } else {
-  //   std::cout << "autonomous command null!";
-  // }
+  if (m_autonomousCommand != nullptr) {
+    frc2::CommandScheduler::GetInstance().Schedule(m_autonomousCommand);
+  } else {
+    std::cout << "autonomous command null!";
+  }
 }
 
 void Robot::AutonomousPeriodic() {}
@@ -61,9 +61,9 @@ void Robot::TeleopInit() {
   // continue until interrupted by another command, remove
   // this line or comment it out.
   // frc::DataLogManager::Start();
-  // if (m_autonomousCommand != nullptr) {
-  //   m_autonomousCommand->Cancel();
-  // }
+  if (m_autonomousCommand != nullptr) {
+    m_autonomousCommand->Cancel();
+  }
 }
 
 /**
