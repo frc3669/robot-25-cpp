@@ -19,7 +19,7 @@ using namespace pathplanner;
 RobotContainer::RobotContainer() {
   // Configure the button bindings
   ConfigureBindings();
-  // ConfigureChooser();
+  ConfigureChooser();
   RegisterNamedCommands();
 }
 
