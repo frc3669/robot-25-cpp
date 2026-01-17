@@ -19,7 +19,7 @@ using namespace pathplanner;
 RobotContainer::RobotContainer() {
   // Configure the button bindings
   ConfigureBindings();
-  ConfigureChooser();
+  // ConfigureChooser();
   RegisterNamedCommands();
 }
 
@@ -55,15 +55,15 @@ void RobotContainer::RegisterNamedCommands() {
   NamedCommands::registerCommand("score left pole", Score::ScoreCoralForAuto(m_drive, m_scoringMech, true));
 }
 
-void RobotContainer::ConfigureChooser() {
-  m_centerAuto = PathPlannerAuto("Score Coral").ToPtr();
-  if (m_centerAuto) {
-    m_chooser.SetDefaultOption("Center Auto", m_centerAuto.value().get());
-  } else {
-    clog << "failed to get Center Auto\n"; 
-  }
-  frc::SmartDashboard::PutData(&m_chooser);
-}
+// void RobotContainer::ConfigureChooser() {
+//   m_centerAuto = PathPlannerAuto("Score Coral").ToPtr();
+//   if (m_centerAuto.has_value()) {
+//     m_chooser.SetDefaultOption("Center Auto", m_centerAuto.value().get());
+//   } else {
+//     clog << "failed to get Center Auto\n";
+//   }
+//   frc::SmartDashboard::PutData(&m_chooser);
+// }
 
 void RobotContainer::ConfigureDefaultCommands() {
   m_drive.SetDefaultCommand(std::move(m_drive.defaultDrive()));
