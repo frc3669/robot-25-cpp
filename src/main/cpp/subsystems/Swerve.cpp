@@ -14,7 +14,8 @@ using namespace ctre::phoenix6;
 using namespace pathplanner;
 
 Swerve::Swerve(int driverControllerPortNum) : 
-        m_driverController(driverControllerPortNum) {
+        m_driverController(driverControllerPortNum)
+{
     // add all the status signals to a list for syncronized updates
     m_gyroAngleSignal = new StatusSignal(gyro.GetYaw());
     m_statusSignals.push_back(m_gyroAngleSignal);
@@ -49,6 +50,7 @@ Swerve::Swerve(int driverControllerPortNum) :
     );
 }
 
+
 void Swerve::SimulationPeriodic() {}
 
 void Swerve::Periodic() {
@@ -59,6 +61,8 @@ void Swerve::Periodic() {
     frc::SmartDashboard::PutNumber("target pose X", m_targetPose.X().value());
     frc::SmartDashboard::PutNumber("target pose Y", m_targetPose.Y().value());
     frc::SmartDashboard::PutNumber("target pose A", m_targetPose.Rotation().Degrees().value());
+    // Show the gyro Yaw angle
+    frc::SmartDashboard::PutNumber("gyro A= ", gyro.GetYaw().GetValue().value());
 }
 
 void Swerve::driveTeleop() {
@@ -226,53 +230,64 @@ bool Swerve::safeToMoveCoralManipulator() {
 
 void Swerve::resetRotation(frc::Rotation2d newRotation) {
     gyro.SetYaw(newRotation.Degrees());
-    LimelightHelpers::SetRobotOrientation("", newRotation.Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
+    LimelightHelpers::SetRobotOrientation("limelight-front", newRotation.Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
     m_pose = {m_pose.Translation(), newRotation};
 }
 
 void Swerve::resetPose(frc::Pose2d newPose) {
     gyro.SetYaw(newPose.Rotation().Degrees());
-    LimelightHelpers::SetRobotOrientation("", newPose.Rotation().Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
+    LimelightHelpers::SetRobotOrientation("limelight-front", newPose.Rotation().Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
     m_pose = newPose;
+}
+
+
+void Swerve::UpdateVision(const std::string& name) {
+
+    // Get the limelight pose, based upon team alliance (Red or Blue)
+    LimelightHelpers::PoseEstimate llPose;
+    if (frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue) {   
+        llPose = LimelightHelpers::getBotPoseEstimate_wpiBlue(name); 
+    } else {
+         llPose = LimelightHelpers::getBotPoseEstimate_wpiRed(name); 
+    }
+
+    // Check if the measurement is valid (e.g. if you see an April Tag)
+    if (llPose.tagCount > 0 && llPose.timestampSeconds != (units::time::second_t(0)) && LimelightHelpers::getTV(name)) {
+        // Convert Pose3d to Pose2d if using a 2D estimator (common for FRC swerve)
+        frc::Pose2d visionPose2d = llPose.pose;
+        frc::SmartDashboard::PutNumber(name+" X= ", visionPose2d.X().value());
+        frc::SmartDashboard::PutNumber(name+" Y= ", visionPose2d.Y().value());
+        frc::SmartDashboard::PutNumber(name+" A= ", visionPose2d.Rotation().Degrees().value());
+
+        // Get the correct timestamp. The helper function provides an FPGA-timestamp-aligned value.
+        units::second_t imageCaptureTime = units::second_t{llPose.timestampSeconds};
+
+        // Add the vision measurement to the pose estimator
+        // Make sure the vision measurement timestamp aligns with your robot's internal timebase (FPGA time is typical)
+        // NOTE: Only use the Robot gyro - do not use the camera vision angle.
+        m_poseEstimator.AddVisionMeasurement(visionPose2d, imageCaptureTime);
+    }
 }
 
 void Swerve::OdometryThread() {
     while (true) {
         BaseStatusSignal::WaitForAll(10_ms, m_statusSignals);
-        m_pose = {m_pose.Translation(), m_gyroAngleSignal->GetValue()};
-        LimelightHelpers::SetRobotOrientation("", m_pose.Rotation().Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
-        frc::Translation2d deltaTranslationAverage{};
-        for (auto & module : m_moduleList) {
-            deltaTranslationAverage = deltaTranslationAverage + module->GetDeltaTranslation();
-        }
-        deltaTranslationAverage = deltaTranslationAverage * 0.25;
-        deltaTranslationAverage.RotateBy(m_pose.Rotation());
-        m_pose = m_pose + frc::Transform2d{deltaTranslationAverage, 0_deg};
-        // Get the pose estimate
-        LimelightHelpers::PoseEstimate limelightMeasurement = LimelightHelpers::getBotPoseEstimate_wpiBlue_MegaTag2("");
-        m_pastTranslations[m_currentTranslationIndex] = m_pose.Translation();
-        if (m_validPastTranslationCount < 100) {
-            m_validPastTranslationCount++;
-        }
-        if (limelightMeasurement.pose != m_lastLimelightPose && limelightMeasurement.tagCount != 0) {
-            double latency = LimelightHelpers::getLatency_Capture() + LimelightHelpers::getLatency_Pipeline();
-            int compensationCycles = latency*0.2;
-            if (compensationCycles > m_validPastTranslationCount-1) {
-                compensationCycles = m_validPastTranslationCount-1;
-            }
-            if (compensationCycles > 99) {
-                compensationCycles = 99;
-            }
-            frc::Translation2d distanceSinceCapture = m_pastTranslations[m_currentTranslationIndex]
-                                                    - m_pastTranslations[(m_currentTranslationIndex - compensationCycles + 100) % 100];
-            m_pose = frc::Pose2d{limelightMeasurement.pose.Translation() + distanceSinceCapture, m_pose.Rotation()};
-            m_validPastTranslationCount = 0;
-            m_lastLimelightPose = limelightMeasurement.pose;
-        }
-        m_currentTranslationIndex++;
-        if (m_currentTranslationIndex > 99) {
-            m_currentTranslationIndex = 0;
-        }
+
+        // Update the Pose Estimation from the Robot Odometry
+        m_poseEstimator.Update ( m_gyroAngleSignal->GetValue(),
+                                 { m_frontLeft.GetPosition(), 
+                                   m_frontRight.GetPosition(),
+                                   m_backLeft.GetPosition(), 
+                                   m_backRight.GetPosition()} );
+
+        // Adjust for each Limelight Camera
+        // FRONT
+        UpdateVision("limelight-front");
+        // BACK
+        //UpdateVision("limelight-back");
+
+        // Get the current robot pose
+        m_pose = m_poseEstimator.GetEstimatedPosition();       
     }
 }
 

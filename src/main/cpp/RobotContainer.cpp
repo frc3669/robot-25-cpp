@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "RobotContainer.h"
+#include "subsystems/Swerve.h"
 
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/kinematics/ChassisSpeeds.h>
@@ -63,6 +64,10 @@ void RobotContainer::ConfigureChooser() {
     clog << "failed to get Center Auto\n";
   }
   frc::SmartDashboard::PutData(&m_chooser);
+
+  m_turret.m_shooterTgtChooser.SetDefaultOption("BLUEHub", "BLUEHub");
+  m_turret.m_shooterTgtChooser.AddOption("REDHub", "REDHub");
+  frc::SmartDashboard::PutData(&m_turret.m_shooterTgtChooser);
 }
 
 void RobotContainer::ConfigureDefaultCommands() {
@@ -75,13 +80,26 @@ frc2::Command* RobotContainer::GetAutonomousCommand() {
   return m_chooser.GetSelected();
 }
 
+
+
 void RobotContainer::DisplaySchedulerDetails() {
   frc::SmartDashboard::PutData("Command Scheduler Status", &frc2::CommandScheduler::GetInstance());
   frc::SmartDashboard::PutData("Swerve Status", &m_drive);
   frc::SmartDashboard::PutData("Scoring Mechanism Status", &m_scoringMech);
   frc::SmartDashboard::PutData("Climb Status", &m_climber);
+
 }
 
 void RobotContainer::InitializeOdometry() {
+  m_turret.setTurretTarget (m_turret.m_BLUE_TargetHub);
+  string selectedShooterTarget = m_turret.m_shooterTgtChooser.GetSelected();
+  if (selectedShooterTarget == "BLUEHub") {
+    m_turret.setTurretTarget (m_turret.m_BLUE_TargetHub);
+  }
+  else if (selectedShooterTarget == "REDHub") {
+    m_turret.setTurretTarget (m_turret.m_RED_TargetHub);
+  }
+
   m_drive.InitializeOdometry();
+  
 }

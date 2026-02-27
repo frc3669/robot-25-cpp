@@ -3,19 +3,29 @@
 #include <frc2/command/SubsystemBase.h>
 #include <frc/DigitalInput.h>
 #include <frc/GenericHID.h>
+#include <frc/estimator/SwerveDrivePoseEstimator.h>
 #include <frc/kinematics/SwerveDriveKinematics.h>
+#include <frc/geometry/Pose2d.h>
+#include <frc/geometry/Transform3d.h>
+
 #include <ctre/phoenix6/Pigeon2.hpp>
 #include <ctre/phoenix6/StatusSignal.hpp>
 #include <ctre/phoenix6/CANBus.hpp>
 #include "subsystems/SwerveModule.h"
 #include <frc/Timer.h>
+//#include <frc/Matrix.h>
+#include <units/time.h>
+
 #include <frc/smartdashboard/Field2d.h>
 #include <pathplanner/lib/config/RobotConfig.h>
 #include "Constants.h"
 #include "util.h"
 #include <LimelightHelpers.h>
 
-class Swerve : public frc2::SubsystemBase {
+
+class Swerve : public frc2::SubsystemBase 
+
+{
   public:
     Swerve(int driverControllerPortNum);
     void Periodic() override;
@@ -28,7 +38,12 @@ class Swerve : public frc2::SubsystemBase {
     bool reefWithinRange();
     bool safeToMoveCoralManipulator();
     ~Swerve();
-    
+
+   
+    // ****************************************
+    // get the current pose of the robot
+    frc::Pose2d getPose();
+
   private:
     frc::GenericHID m_driverController;
     ctre::phoenix6::hardware::Pigeon2 gyro{1, ctre::phoenix6::CANBus("CTREdevices")};
@@ -37,22 +52,47 @@ class Swerve : public frc2::SubsystemBase {
     frc::Timer autoTimer;
     frc::Timer positionReachedTimer;
     // robot swerve modules
-    SwerveModule m_frontLeft = SwerveModule(1), m_backLeft = SwerveModule(2),
-        m_backRight = SwerveModule(3), m_frontRight = SwerveModule(4);
+    SwerveModule m_frontLeft  = SwerveModule(1), 
+                 m_frontRight = SwerveModule(4),
+                 m_backLeft   = SwerveModule(2),
+                 m_backRight  = SwerveModule(3) ;
     // array of module pointers
-    SwerveModule * m_moduleList[4] = {&m_frontLeft, &m_backLeft,
-                                    &m_backRight, &m_frontRight};
+    SwerveModule * m_moduleList[4] = { &m_frontLeft, 
+                                       &m_frontRight,
+                                       &m_backLeft,
+                                       &m_backRight };
+
     frc::Translation2d m_frontLeftLocation{12_in, 12_in};
+    frc::Translation2d m_frontRightLocation{12_in, -12_in};
     frc::Translation2d m_backLeftLocation{-12_in, 12_in};
     frc::Translation2d m_backRightLocation{-12_in, -12_in};
-    frc::Translation2d m_frontRightLocation{12_in, -12_in};
+    
     /**
      * swerve kinematics object for calculating the module states
-     * given the positions of the modules and the chassis speeds */
-    frc::SwerveDriveKinematics<4> m_kinematics {
-      m_frontLeftLocation, m_backLeftLocation,
-      m_backRightLocation, m_frontRightLocation
+     * given the positions of the modules and the chassis speeds 
+     * NOTE: THE Order is important....Changed to FL<FR< BL< BR*/
+    frc::SwerveDriveKinematics<4> m_kinematics 
+    {
+      m_frontLeftLocation, m_frontRightLocation,
+      m_backLeftLocation, m_backRightLocation
     };
+
+    frc::SwerveDrivePoseEstimator<4> m_poseEstimator 
+    {
+      m_kinematics,
+      frc::Rotation2d{0.0_rad},                                // Initial Gyro Angle
+      { m_frontLeft.GetPosition(), m_frontRight.GetPosition(), 
+        m_backLeft.GetPosition(),  m_backRight.GetPosition() },
+      frc::Pose2d{0.0_m, 0.0_m, frc::Rotation2d{0.0_deg}},     //Initial Field Position
+      {0.1, 0.1, 0.1},                                         // State Std Devs (Trust Robot)
+      {0.7, 0.7, 9999999}                                      // Vision Std Devs () - NO CAM
+    };
+
+    void UpdateVision(const std::string& name);
+
+    std::shared_ptr<nt::NetworkTable> m_llFront;
+    std::shared_ptr<nt::NetworkTable> m_llRear;
+
     // slew limiter object that limits the rate at which we approach the target chassis speeds
     Util::SlewLimiter m_slewLimiter;
     // current robot pose
@@ -61,6 +101,28 @@ class Swerve : public frc2::SubsystemBase {
     frc::Pose2d m_lastLimelightPose;
     // target pose for autonomous positioning during teleop
     frc::Pose2d m_targetPose;
+
+    // ****************************************
+    //
+    // Left Camera Pose (Left Side of Robot Front Facing Pose)
+    // Relative to the Robot Center, Front Facing Pose
+    frc::Transform2d m_relativeLeftCameraPose{ 
+            frc::Translation2d{ units::length::meter_t {+12.0_in},
+                                units::length::meter_t {+12.0_in}},
+                                frc::Rotation2d(units::angle::degree_t{+45})};
+    // ****************************************
+
+    // ****************************************
+    //
+    // Right Camera Pose (Right Side of Robot Front Facing Pose)
+    // Relative to the Robot Center, Front Facing Pose
+    frc::Transform2d m_relativeRightCameraPose{ 
+            frc::Translation2d{ units::length::meter_t {+12.0_in},
+                                units::length::meter_t {-12.0_in}},
+                                frc::Rotation2d(units::angle::degree_t{-45})};
+    // ****************************************
+
+
     // rotating buffer to store past odometry positions
     frc::Translation2d m_pastTranslations[100];
     // the number of translations stored in the buffer that are relavent
@@ -89,7 +151,7 @@ class Swerve : public frc2::SubsystemBase {
     // get the current robot relative chassis speeds
     frc::ChassisSpeeds getSpeeds();
     // get the current pose of the robot
-    frc::Pose2d getPose();
+    //    frc::Pose2d getPose();  Made Public
     // get coral scoring target pose for the given pole side
     frc::Pose2d getCoralScoringTargetPose(bool isLeft);
     // get intermediate scoring pose at a safe distance from the target to prevent the elevator from colliding

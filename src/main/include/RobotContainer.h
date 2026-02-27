@@ -13,6 +13,7 @@
 #include "subsystems/ScoringMech.h"
 #include "subsystems/Swerve.h"
 #include "subsystems/Climb.h"
+#include "subsystems/Turret.h"
 
 /**
  * This class is where the bulk of the robot should be declared.  Since
@@ -41,6 +42,7 @@ class RobotContainer {
   // subsystems...
   Swerve m_drive{0};
   Climb m_climber{};
+  Turret m_turret{&m_drive, 0};
 
   // autonomous routines
   std::optional<frc2::CommandPtr> m_centerAuto;
