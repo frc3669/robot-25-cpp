@@ -230,13 +230,13 @@ bool Swerve::safeToMoveCoralManipulator() {
 
 void Swerve::resetRotation(frc::Rotation2d newRotation) {
     gyro.SetYaw(newRotation.Degrees());
-    LimelightHelpers::SetRobotOrientation("limelight-front", newRotation.Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
+    //LimelightHelpers::SetRobotOrientation("limelight-front", newRotation.Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
     m_pose = {m_pose.Translation(), newRotation};
 }
 
 void Swerve::resetPose(frc::Pose2d newPose) {
     gyro.SetYaw(newPose.Rotation().Degrees());
-    LimelightHelpers::SetRobotOrientation("limelight-front", newPose.Rotation().Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
+    //LimelightHelpers::SetRobotOrientation("limelight-front", newPose.Rotation().Degrees().value(), 0.0, 0.0, 0.0, 0.0, 0.0);
     m_pose = newPose;
 }
 
@@ -283,8 +283,12 @@ void Swerve::OdometryThread() {
         // Adjust for each Limelight Camera
         // FRONT
         UpdateVision("limelight-front");
+        // LEFT
+        UpdateVision("limelight-left");   
+        // RIGHT
+        UpdateVision("limelight-right");       
         // BACK
-        //UpdateVision("limelight-back");
+        UpdateVision("limelight-back");
 
         // Get the current robot pose
         m_pose = m_poseEstimator.GetEstimatedPosition();       
