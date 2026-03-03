@@ -10,5 +10,6 @@ namespace am{
     void limit(double &angle);
     void limit(units::radian_t &angle);
     void limit(units::degree_t &angle);
+    void limitDegrees(double &angle);
     float getProjectionSize(complex<float> a, complex<float> b);
 }

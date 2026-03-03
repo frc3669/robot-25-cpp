@@ -55,6 +55,7 @@ class Turret : public frc2::SubsystemBase {
    
     // target pose for autonomous positioning during teleop
     frc::Pose2d m_targetPose;
+    double lastTurretAngle = 0;
 
     // ****************************************
     // Turret Pose (Determined from Robot Pose and turret placement offsets)
@@ -65,10 +66,10 @@ class Turret : public frc2::SubsystemBase {
     // (Since facing the same direction as the robot, angle is ZERO).
     // (Translates inches to meters accomplished by the type definitions)
     // (TBD - X= -12.0 inches, Y = +12.0 inches, NO ROTATION !!!)
-    frc::Transform2d m_relativeTurretPose{ 
-            frc::Translation2d{ units::length::meter_t {-12.0_in},
-                                units::length::meter_t {+12.0_in}},
-                                frc::Rotation2d(units::angle::degree_t{0})};
+    frc::Translation2d m_turretTranslation{ units::length::meter_t {-12.0_in},
+                                            units::length::meter_t {+12.0_in}};
+
+                    
     // ****************************************
 
    

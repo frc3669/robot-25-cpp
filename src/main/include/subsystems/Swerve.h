@@ -102,26 +102,7 @@ class Swerve : public frc2::SubsystemBase
     // target pose for autonomous positioning during teleop
     frc::Pose2d m_targetPose;
 
-    // ****************************************
-    //
-    // Left Camera Pose (Left Side of Robot Front Facing Pose)
-    // Relative to the Robot Center, Front Facing Pose
-    frc::Transform2d m_relativeLeftCameraPose{ 
-            frc::Translation2d{ units::length::meter_t {+12.0_in},
-                                units::length::meter_t {+12.0_in}},
-                                frc::Rotation2d(units::angle::degree_t{+45})};
-    // ****************************************
-
-    // ****************************************
-    //
-    // Right Camera Pose (Right Side of Robot Front Facing Pose)
-    // Relative to the Robot Center, Front Facing Pose
-    frc::Transform2d m_relativeRightCameraPose{ 
-            frc::Translation2d{ units::length::meter_t {+12.0_in},
-                                units::length::meter_t {-12.0_in}},
-                                frc::Rotation2d(units::angle::degree_t{-45})};
-    // ****************************************
-
+    
 
     // rotating buffer to store past odometry positions
     frc::Translation2d m_pastTranslations[100];

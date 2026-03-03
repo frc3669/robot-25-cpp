@@ -246,9 +246,9 @@ void Swerve::UpdateVision(const std::string& name) {
     // Get the limelight pose, based upon team alliance (Red or Blue)
     LimelightHelpers::PoseEstimate llPose;
     if (frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue) {   
-        llPose = LimelightHelpers::getBotPoseEstimate_wpiBlue(name); 
+        llPose = LimelightHelpers::getBotPoseEstimate_wpiBlue_MegaTag2(name); 
     } else {
-         llPose = LimelightHelpers::getBotPoseEstimate_wpiRed(name); 
+         llPose = LimelightHelpers::getBotPoseEstimate_wpiRed_MegaTag2(name); 
     }
 
     // Check if the measurement is valid (e.g. if you see an April Tag)

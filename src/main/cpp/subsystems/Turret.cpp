@@ -34,7 +34,7 @@ void Turret::Periodic() {
         frc::Pose2d  m_pose = m_drivePtr->getPose();
 
         // Determine the Turret Pose (Relative to the Robot Pose)
-         m_turretPose = m_pose + m_relativeTurretPose;
+         m_turretPose = frc::Pose2d{m_pose.Translation()+m_turretTranslation.RotateBy(m_pose.Rotation()), m_pose.Rotation()};
 
         // Compute Shooting solution (stationary) Turret Angle and Distance
         // The turret angle will point to the target, compensating for robot heading.
@@ -98,34 +98,39 @@ double Turret::computeDistanceInMeters(double x1, double y1, double x2, double y
 //       The turretPose must use robotPose and account for turret placement.
 //       (Turret Offset from robot center AND rotation on the field due to robot heading.)
 //
-double Turret::computeTurretAngleInDegrees(frc::Pose2d robotPose, frc::Translation2d turretTarget )
+double Turret::computeTurretAngleInDegrees(frc::Pose2d turretPose, frc::Translation2d turretTarget )
 {
     double pi_val = 4.0 * std::atan(1.0);       // Compute PI to many digits, atan (1 radian) = PI/4
     double RadiansToDegrees = 180.0 / pi_val;   // Radians to Degrees Conversion Factor
     //double DegreesToRadians = pi_val / 180.0; // Degrees to Radians Conversion Factor
-    double TurretAngleDegrees = 0.0;
+    double turretAngleDegrees = 0.0;
     double MAX_TURRET_ROTATION_ANGLE = 270.0;   // Maximum Turret Rotation Angle (Either Direction)
     //double TurretAngleRadians = 0.0;
 
     // Compute the Angle from the Robot X,Y Position to the Target X,Y Position
-    double delta_X = (double) (turretTarget.X() - robotPose.X());
-    double delta_Y = (double) (turretTarget.Y() - robotPose.Y());
+    double delta_X = (double) (turretTarget.X() - turretPose.X());
+    double delta_Y = (double) (turretTarget.Y() - turretPose.Y());
     double robotToTgtAngleRadians = atan2(delta_Y, delta_X);                    // Radians
     double robotToTgtAngleDegrees = robotToTgtAngleRadians * RadiansToDegrees;  // Degrees
 
     // Turret Angle to Target -  based on Robot Heading
-    TurretAngleDegrees = robotToTgtAngleDegrees - (double) (robotPose.Rotation().Degrees());
+    turretAngleDegrees = robotToTgtAngleDegrees - (double) (turretPose.Rotation().Degrees());
  
     // Keep Turret Angle within physical limits
-    if (TurretAngleDegrees <= -(MAX_TURRET_ROTATION_ANGLE)) {
-        TurretAngleDegrees += 360.0;
-    } else if (TurretAngleDegrees >= MAX_TURRET_ROTATION_ANGLE) {
-        TurretAngleDegrees -= 360.0;
+    double turretAngleChange = turretAngleDegrees - lastTurretAngle;
+    am::limitDegrees(turretAngleChange);
+    turretAngleDegrees = lastTurretAngle + turretAngleChange;
+    while (turretAngleDegrees > MAX_TURRET_ROTATION_ANGLE) {
+        turretAngleDegrees -= 360;
+    }
+    while (turretAngleDegrees < -MAX_TURRET_ROTATION_ANGLE) {
+        turretAngleDegrees += 360;
     }
 
-    //TurretAngleRadians = TurretAngleDegrees *  DegreesToRadians;
 
-    return (TurretAngleDegrees);
+    lastTurretAngle = turretAngleDegrees;
+
+    return (turretAngleDegrees);
 }
 // ****************************************
 

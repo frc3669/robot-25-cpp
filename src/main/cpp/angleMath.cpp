@@ -18,6 +18,15 @@ void am::limit(double &angle) {
     }
 }
 
+void am::limitDegrees(double &angle) {
+    while (angle > 180){
+        angle -= 360;
+    }
+    while (angle < -180){
+        angle += 360;
+    }
+}
+
 void am::limit(units::radian_t &angle) {
     while (angle > 180_deg) {
         angle -= 360_deg;
